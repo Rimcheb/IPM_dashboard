@@ -999,6 +999,8 @@ let idx = MONTHS.length - 1; // default = most recent month
 
 let currentTrendSpan = "12";
 let datePickerYear  = _today.getFullYear();
+const INITIAL_FETCH_TIMEOUT_MS = 7000;
+const RENDER_FETCH_TIMEOUT_MS = 15000;
 
 // ── Loading state ────────────────────────────
 function setLoading(on) {
@@ -1065,13 +1067,14 @@ async function pushToSheets() {
   }
 }
 
-async function getData(key){
+async function getData(key, {isInitial = false} = {}){
   const parts = key.split(" ");
   const m = MN.indexOf(parts[0]) + 1;
   const year = parts[1];
   const url = `${APP_BASE}/api/dashboard?year=${year}&month=${m}&trend_months=${currentTrendSpan}`;
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 45000); // 45s timeout
+  const timeoutMs = isInitial ? INITIAL_FETCH_TIMEOUT_MS : RENDER_FETCH_TIMEOUT_MS;
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const r = await fetch(url, {signal: ctrl.signal});
     clearTimeout(timer);
@@ -1079,24 +1082,28 @@ async function getData(key){
     return r.json();
   } catch(e) {
     clearTimeout(timer);
-    if(e.name === "AbortError") throw new Error("Request timed out (45s). SQL mode is taking longer than expected.");
+    if(e.name === "AbortError") throw new Error(`Request timed out (${Math.round(timeoutMs/1000)}s). SQL query is still running.`);
     throw e;
   }
 }
 
-async function render(key){
-  setLoading(true);
+async function render(key, {showLoader = true, isInitial = false} = {}){
+  if (showLoader) setLoading(true);
   showError("");
   showWarning("");
   let d;
   try {
-    d = await getData(key);
+    d = await getData(key, {isInitial});
   } catch(e) {
-    setLoading(false);
+    if (showLoader) setLoading(false);
+    if (isInitial) {
+      showWarning("Live SQL data is still loading. The dashboard will update as soon as the query finishes.");
+      return;
+    }
     showError(`Could not load data: ${e.message} — make sure the Python server is running (python server.py)`);
     return;
   }
-  setLoading(false);
+  if (showLoader) setLoading(false);
 
   document.getElementById("monthLbl").textContent = key;
 
@@ -2030,7 +2037,7 @@ renderCountyCards([]);  // show static cards immediately before first API call
 renderAllTimeCharts();  // static all-time demographic charts from Demographics + TEFAP reports
 renderLifetimeCharts(); // static charts from Agency Assistance by Category report
 renderZipCharts();      // static ZIP code charts from Agency Assistance by Household report
-render(MONTHS[idx]);
+render(MONTHS[idx], {showLoader: false, isInitial: true});
 </script>
 </body>
 </html>
