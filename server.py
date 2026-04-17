@@ -14,6 +14,7 @@ import os
 import calendar
 import argparse
 import time
+from threading import Lock
 from pathlib import Path
 import requests
 from datetime import date, datetime
@@ -25,7 +26,7 @@ app = Flask(__name__)
 CORS(app)
 # Import Google Sheets helpers from ipm.py (same codebase)
 try:
-    sys.path.insert(0, ".")
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
     from ipm import connect_to_google_sheets, append_to_history, update_dashboard_tab
     _IPM_IMPORT_OK = True
 except Exception:
@@ -51,11 +52,17 @@ DB_NAME     = os.getenv("DB_NAME", "oasis")
 DB_USER     = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 
-GOOGLE_CREDS_FILE  = os.getenv("GOOGLE_CREDS_FILE", "ipm-dashboard.json")
+GOOGLE_CREDS_FILE  = os.getenv("GOOGLE_CREDS_FILE", str(Path(__file__).resolve().parent / "ipm-dashboard.json"))
 GOOGLE_SHEET_NAME  = os.getenv("GOOGLE_SHEET_NAME", "IPM Monthly Dashboard")
 GOOGLE_SHEET_ID    = os.getenv("GOOGLE_SHEET_ID", "1POZpWu4tgYSGW7o5DUN4kBbL0vP0vhD9Skeq3FLYHSk")
 HISTORY_TAB_NAME   = os.getenv("HISTORY_TAB_NAME", "Monthly History")
 DASHBOARD_TAB_NAME = os.getenv("DASHBOARD_TAB_NAME", "Dashboard")
+
+# Small in-memory cache for repeated dashboard requests.
+# This speeds up back-to-back page loads without requiring paid warm instances.
+DASHBOARD_CACHE_TTL_SECONDS = int(os.getenv("DASHBOARD_CACHE_TTL_SECONDS", "180"))
+_DASHBOARD_CACHE = {}
+_DASHBOARD_CACHE_LOCK = Lock()
 
 # ===========================================================================
 # SQL HELPERS
@@ -1119,7 +1126,7 @@ def _get_dashboard_api(year, month, trend_months="12"):
 
 @app.route("/")
 def serve_dashboard():
-    return send_file("dashboard.html", mimetype="text/html")
+    return send_file(Path(__file__).resolve().parent / "dashboard.html", mimetype="text/html")
 
 
 @app.route("/api/dashboard")
@@ -1131,10 +1138,23 @@ def dashboard():
     except ValueError:
         return jsonify({"error": "Invalid year or month"}), 400
 
+    cache_key = (year, month, str(trend_months))
+    now = time.time()
+
+    # Fast path: serve recent result from memory.
+    with _DASHBOARD_CACHE_LOCK:
+        cached = _DASHBOARD_CACHE.get(cache_key)
+        if cached and (now - cached["ts"] < DASHBOARD_CACHE_TTL_SECONDS):
+            return jsonify(cached["data"])
+
     try:
         conn = _sql_connect()
         data = _get_dashboard_sql(conn, year, month, trend_months)
         conn.close()
+
+        with _DASHBOARD_CACHE_LOCK:
+            _DASHBOARD_CACHE[cache_key] = {"ts": now, "data": data}
+
         return jsonify(data)
     except Exception as e:
         return jsonify({"error": f"SQL failed: {e}"}), 500
