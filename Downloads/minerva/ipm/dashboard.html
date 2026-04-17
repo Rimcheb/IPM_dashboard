@@ -210,6 +210,9 @@ pre{background:#1A1D23;color:#ABB2BF;border-radius:var(--rs);padding:14px 16px;f
     <button class="dash-tab-btn" data-panel="monthly" onclick="setDashboardTab('monthly')">Monthly</button>
     <button class="dash-tab-btn" data-panel="county" onclick="setDashboardTab('county')">County</button>
     <button class="dash-tab-btn" data-panel="demographics" onclick="setDashboardTab('demographics')">Demographics</button>
+    <button class="dash-tab-btn" data-panel="activity" onclick="setDashboardTab('activity')">Program Activity</button>
+    <button class="dash-tab-btn" data-panel="alltime" onclick="setDashboardTab('alltime')">All-Time</button>
+    <button class="dash-tab-btn" data-panel="zipcode" onclick="setDashboardTab('zipcode')">Households by ZIP</button>
     <button class="dash-tab-btn" data-panel="reference" onclick="setDashboardTab('reference')">SQL Reference</button>
   </div>
 
@@ -329,6 +332,46 @@ pre{background:#1A1D23;color:#ABB2BF;border-radius:var(--rs);padding:14px 16px;f
   </div>
   <div class="county-grid" id="countyCardGrid"></div>
 
+  <!-- All-time program totals from Agency Assistance by Category report -->
+  <div style="margin-top:28px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+      <div class="sec-lbl" style="margin-bottom:0">All-Time Program Totals</div>
+      <div style="font-size:11px;color:var(--t3)">Source: Oasis Agency Assistance by Category · All years through Apr 2026</div>
+    </div>
+    <div class="m-grid" style="margin-bottom:22px">
+      <div class="m-card hero">
+        <div class="m-lbl">Assistance Records</div>
+        <div class="m-val">92,507</div>
+        <div class="m-sub">All programs · all time</div>
+      </div>
+      <div class="m-card">
+        <div class="m-lbl">Unique Households</div>
+        <div class="m-val">12,437</div>
+        <div class="m-sub">37,426 total members · all time</div>
+      </div>
+      <div class="m-card">
+        <div class="m-lbl">Pounds Distributed</div>
+        <div class="m-val">2.57M</div>
+        <div class="m-sub">All food programs · all time</div>
+      </div>
+      <div class="m-card">
+        <div class="m-lbl">Boxes / Bags / Kits</div>
+        <div class="m-val">25,518</div>
+        <div class="m-sub">Incl. diapers &amp; period kits</div>
+      </div>
+    </div>
+    <div class="c-row">
+      <div class="c-card" style="grid-column:span 2">
+        <div class="c-title">Households Served by Program — All Time</div>
+        <div style="position:relative;height:300px"><canvas id="cProgLifetime"></canvas></div>
+      </div>
+      <div class="c-card">
+        <div class="c-title">Pounds Distributed by Food Program — All Time</div>
+        <div style="position:relative;height:300px"><canvas id="cPoundsLifetime"></canvas></div>
+      </div>
+    </div>
+  </div>
+
 </section>
 
 <section class="dash-panel" data-panel="demographics">
@@ -383,6 +426,11 @@ pre{background:#1A1D23;color:#ABB2BF;border-radius:var(--rs);padding:14px 16px;f
     </div>
   </div>
 
+</section>
+
+<section class="dash-panel" data-panel="activity">
+  <div class="sec-lbl">Program Activity</div>
+
   <!-- Bottom stats -->
   <div class="sec-lbl">Program Activity Snapshot — Year to Date</div>
   <div class="s-grid" style="grid-template-columns:repeat(4,1fr)">
@@ -434,6 +482,289 @@ pre{background:#1A1D23;color:#ABB2BF;border-radius:var(--rs);padding:14px 16px;f
       <div class="s-name"><span class="source-title" data-source="Total power packs distributed year-to-date (manually reported).">Power Packs</span></div>
       <div class="s-period">YTD total</div>
     </div>
+  </div>
+
+  <!-- Non-food program all-time totals from Agency Assistance by Category report -->
+  <div style="margin-top:28px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+      <div class="sec-lbl" style="margin-bottom:0">Non-Food Program Totals — All Time</div>
+      <div style="font-size:11px;color:var(--t3)">Source: Oasis Agency Assistance by Category · All years through Apr 2026</div>
+    </div>
+    <div class="s-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="s-box">
+        <span class="s-ico">🍼</span>
+        <div class="s-val">1,585</div>
+        <div class="s-name">Sweet Cheeks Diapers</div>
+        <div class="s-period">Households · 13,477 kits</div>
+      </div>
+      <div class="s-box">
+        <span class="s-ico">🍼</span>
+        <div class="s-val">522</div>
+        <div class="s-name">Bulk Diapers</div>
+        <div class="s-period">Households · 2,364 packs</div>
+      </div>
+      <div class="s-box">
+        <span class="s-ico">🌊</span>
+        <div class="s-val">2,831</div>
+        <div class="s-name">Period Kits (Tidal Wave)</div>
+        <div class="s-period">Households · 8,642 kits</div>
+      </div>
+      <div class="s-box">
+        <span class="s-ico">👕</span>
+        <div class="s-val">665</div>
+        <div class="s-name">Clothing Vouchers</div>
+        <div class="s-period">St. Vincent de Paul · 858 vouchers</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<section class="dash-panel" data-panel="alltime">
+
+  <!-- Summary metrics from Demographics report -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+    <div class="sec-lbl" style="margin-bottom:0">All-Time Totals</div>
+    <div style="font-size:11px;color:var(--t3)">Source: Oasis Agency Assistance by Demographics · All years through Apr 2026</div>
+  </div>
+  <div class="m-grid" style="margin-bottom:22px">
+    <div class="m-card hero">
+      <div class="m-lbl">Assistance Records</div>
+      <div class="m-val">117,553</div>
+      <div class="m-sub">All programs · all time</div>
+    </div>
+    <div class="m-card">
+      <div class="m-lbl">Unique Households</div>
+      <div class="m-val">13,615</div>
+      <div class="m-sub">40,481 total members</div>
+    </div>
+    <div class="m-card">
+      <div class="m-lbl">Pounds Distributed</div>
+      <div class="m-val">3.26M</div>
+      <div class="m-sub">All food programs · all time</div>
+    </div>
+    <div class="m-card">
+      <div class="m-lbl">Boxes / Bags / Kits</div>
+      <div class="m-val">30,416</div>
+      <div class="m-sub">Food + non-food programs</div>
+    </div>
+  </div>
+
+  <!-- Gender + Veteran + Age & Homeless -->
+  <div class="c-row" style="margin-bottom:22px">
+    <div class="c-card">
+      <div class="c-title">Gender — All-Time Unique Households</div>
+      <div style="height:160px;position:relative"><canvas id="cLtGender"></canvas></div>
+      <div class="legend" id="lLtGender"></div>
+    </div>
+    <div class="c-card">
+      <div class="c-title">Veteran Status — All-Time Unique Households</div>
+      <div style="height:160px;position:relative"><canvas id="cLtVet"></canvas></div>
+      <div class="legend" id="lLtVet"></div>
+    </div>
+    <div class="c-card">
+      <div class="c-title">Household Members by Age — All Time</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:8px">
+        <div class="s-box" style="padding:12px 8px">
+          <div class="s-val" style="font-size:20px">12,642</div>
+          <div class="s-name">Children (0–17)</div>
+          <div class="s-period">31.2% of members</div>
+        </div>
+        <div class="s-box" style="padding:12px 8px">
+          <div class="s-val" style="font-size:20px">19,485</div>
+          <div class="s-name">Adults (18–59)</div>
+          <div class="s-period">48.1% of members</div>
+        </div>
+        <div class="s-box" style="padding:12px 8px">
+          <div class="s-val" style="font-size:20px">7,059</div>
+          <div class="s-name">Seniors (60+)</div>
+          <div class="s-period">17.4% of members</div>
+        </div>
+        <div class="s-box" style="padding:12px 8px;background:var(--a100);border-color:rgba(180,83,9,.2)">
+          <div class="s-val" style="font-size:20px;color:var(--a700)">243</div>
+          <div class="s-name" style="color:#92400E">Homeless HH</div>
+          <div class="s-period" style="color:var(--a700)">All time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ethnicity full width -->
+  <div class="c-row" style="margin-bottom:22px">
+    <div class="c-card" style="grid-column:span 3">
+      <div class="c-title">Ethnicity — All-Time Unique Households</div>
+      <div style="height:220px;position:relative"><canvas id="cLtEthnicity"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Employment + Language -->
+  <div class="c-row" style="margin-bottom:22px">
+    <div class="c-card" style="grid-column:span 2">
+      <div class="c-title">Employment Status — All-Time Unique Households</div>
+      <div style="height:200px;position:relative"><canvas id="cLtEmp"></canvas></div>
+    </div>
+    <div class="c-card">
+      <div class="c-title">Primary Language — All-Time Unique Households</div>
+      <div style="height:200px;position:relative"><canvas id="cLtLang"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Benefits + Education -->
+  <div class="c-row" style="margin-bottom:22px">
+    <div class="c-card" style="grid-column:span 2">
+      <div class="c-title">Government Benefits <span style="font-size:11px;font-weight:400;color:var(--t3)">(multi-select — counts exceed total HH)</span></div>
+      <div style="height:220px;position:relative"><canvas id="cLtBen"></canvas></div>
+    </div>
+    <div class="c-card">
+      <div class="c-title">Education Level — All-Time Unique Households</div>
+      <div style="height:220px;position:relative"><canvas id="cLtEdu"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TEFAP Program section -->
+  <div style="margin-top:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+      <div class="sec-lbl" style="margin-bottom:0">TEFAP Program — All-Time Summary</div>
+      <div style="font-size:11px;color:var(--t3)">Source: Oasis Agency TEFAP Forms Report · All years through Apr 2026</div>
+    </div>
+    <div class="notice" style="margin-bottom:14px">
+      <span>📋</span>
+      <div><strong>TEFAP</strong> (The Emergency Food Assistance Program) is a federal program requiring a signed eligibility form per household. These 16,000 forms represent IPM's all-time federal TEFAP enrollment — separate from pantry visit counts above.</div>
+    </div>
+    <div class="m-grid" style="margin-bottom:16px">
+      <div class="m-card hero">
+        <div class="m-lbl">TEFAP Forms Filed</div>
+        <div class="m-val">16,000</div>
+        <div class="m-sub">Federal food assistance enrollment</div>
+      </div>
+      <div class="m-card">
+        <div class="m-lbl">Heads of Household</div>
+        <div class="m-val">11,047</div>
+        <div class="m-sub">Enrolled in TEFAP program</div>
+      </div>
+      <div class="m-card">
+        <div class="m-lbl">Total Households</div>
+        <div class="m-val">10,918</div>
+        <div class="m-sub">33,406 total members</div>
+      </div>
+      <div class="m-card">
+        <div class="m-lbl">Homeless HOH</div>
+        <div class="m-val">159</div>
+        <div class="m-sub">1.4% of heads of household</div>
+      </div>
+    </div>
+    <div class="s-grid" style="grid-template-columns:repeat(5,1fr)">
+      <div class="s-box">
+        <span class="s-ico">👧</span>
+        <div class="s-val">10,210</div>
+        <div class="s-name">Children in TEFAP HH</div>
+        <div class="s-period">30.6% of members</div>
+      </div>
+      <div class="s-box">
+        <span class="s-ico">👨</span>
+        <div class="s-val">16,243</div>
+        <div class="s-name">Adults in TEFAP HH</div>
+        <div class="s-period">48.6% of members</div>
+      </div>
+      <div class="s-box">
+        <span class="s-ico">👴</span>
+        <div class="s-val">6,028</div>
+        <div class="s-name">Seniors in TEFAP HH</div>
+        <div class="s-period">18.0% of members</div>
+      </div>
+      <div class="s-box">
+        <span class="s-ico">♀</span>
+        <div class="s-val">8,006</div>
+        <div class="s-name">Female HOH</div>
+        <div class="s-period">72.5% of HOH</div>
+      </div>
+      <div class="s-box">
+        <span class="s-ico">♂</span>
+        <div class="s-val">2,971</div>
+        <div class="s-name">Male HOH</div>
+        <div class="s-period">26.9% of HOH</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<section class="dash-panel" data-panel="zipcode">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+    <div class="sec-lbl" style="margin-bottom:0">Household &amp; Member Totals by ZIP Code</div>
+    <div style="font-size:11px;color:var(--t3)">Source: Oasis Agency Assistance by Household · All years through Apr 17, 2026</div>
+  </div>
+
+  <!-- KPI cards -->
+  <div class="m-grid" style="margin-bottom:22px">
+    <div class="m-card hero">
+      <div class="m-lbl">Unique Households</div>
+      <div class="m-val">13,615</div>
+      <div class="m-sub">Across all ZIP codes · all time</div>
+    </div>
+    <div class="m-card">
+      <div class="m-lbl">Total Household Members</div>
+      <div class="m-val">40,481</div>
+      <div class="m-sub">All programs · all time</div>
+    </div>
+    <div class="m-card">
+      <div class="m-lbl">Avg Members per Household</div>
+      <div class="m-val">2.97</div>
+      <div class="m-sub">Across all assisted households</div>
+    </div>
+    <div class="m-card">
+      <div class="m-lbl">Top ZIP Code</div>
+      <div class="m-val">45103</div>
+      <div class="m-sub">1,633 HH · 5,191 members · Milford area</div>
+    </div>
+  </div>
+
+  <!-- Top ZIPs bar + Regional donut -->
+  <div class="c-row" style="margin-bottom:22px">
+    <div class="c-card" style="grid-column:span 2">
+      <div class="c-title">Top 20 ZIP Codes by Households Served — All Time</div>
+      <div style="position:relative;height:360px"><canvas id="cZipBar"></canvas></div>
+    </div>
+    <div class="c-card">
+      <div class="c-title">Service Area Breakdown by Region</div>
+      <div style="position:relative;height:200px"><canvas id="cZipRegion"></canvas></div>
+      <div class="legend" id="lZipRegion" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <!-- Members-per-HH distribution + Avg size by top ZIPs -->
+  <div class="c-row" style="margin-bottom:22px">
+    <div class="c-card">
+      <div class="c-title">Members-per-Household Distribution (Top 25 ZIPs)</div>
+      <div style="position:relative;height:260px"><canvas id="cZipAvgSize"></canvas></div>
+    </div>
+    <div class="c-card" style="grid-column:span 2">
+      <div class="c-title">Households vs. Members — Top 25 ZIPs <span style="font-size:11px;font-weight:400;color:var(--t3)">(bubble = member count)</span></div>
+      <div style="position:relative;height:260px"><canvas id="cZipScatter"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Detail table -->
+  <div style="margin-bottom:11px;display:flex;justify-content:space-between;align-items:center">
+    <div class="sec-lbl" style="margin-bottom:0">Full ZIP Code Detail — Top 50</div>
+    <div style="font-size:11px;color:var(--t3)">Sorted by households served · "none" = no ZIP recorded in Oasis</div>
+  </div>
+  <div style="background:var(--surface);border-radius:var(--r);border:1px solid var(--bd);overflow:hidden;margin-bottom:22px">
+    <table style="width:100%;border-collapse:collapse;font-size:12px" id="zipTable">
+      <thead>
+        <tr style="background:var(--g50);border-bottom:1px solid var(--bd)">
+          <th style="padding:10px 16px;text-align:left;font-weight:600;color:var(--t2);font-size:11px;text-transform:uppercase;letter-spacing:.05em">ZIP</th>
+          <th style="padding:10px 16px;text-align:left;font-weight:600;color:var(--t2);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Area</th>
+          <th style="padding:10px 16px;text-align:right;font-weight:600;color:var(--t2);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Households</th>
+          <th style="padding:10px 16px;text-align:right;font-weight:600;color:var(--t2);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Members</th>
+          <th style="padding:10px 16px;text-align:right;font-weight:600;color:var(--t2);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Avg Size</th>
+          <th style="padding:10px 16px;text-align:right;font-weight:600;color:var(--t2);font-size:11px;text-transform:uppercase;letter-spacing:.05em">% of Total HH</th>
+          <th style="padding:10px 16px;text-align:left;font-weight:600;color:var(--t2);font-size:11px;text-transform:uppercase;letter-spacing:.05em">Share</th>
+        </tr>
+      </thead>
+      <tbody id="zipTableBody"></tbody>
+    </table>
   </div>
 
 </section>
@@ -654,7 +985,7 @@ WHERE aa.date &gt;= '{{start_date}}' AND aa.date &lt; '{{end_exclusive}}'
 <div class="footer">IPM Dashboard · Built from Oasis database · Data updated on export</div>
 
 <script>
-const API_BASE = "";
+const APP_BASE = "";
 const MN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 // Build MONTHS dynamically up to today (never hardcoded)
@@ -701,7 +1032,8 @@ function setDashboardTab(name) {
 
 const PC = ["#14532D","#0F766E","#B45309","#1D4ED8"];
 const AC = ["#22C55E","#0EA5E9","#F59E0B"];
-let cProg, cAge, cTrend, cCounty, cGender, cEthnicity, cVet, cEmp, cBen, cLang, cEdu, cHHSize; // Chart instances
+let cProg, cAge, cTrend, cCounty, cGender, cEthnicity, cVet, cEmp, cBen, cLang, cEdu, cHHSize, cProgLifetime, cPoundsLifetime; // Chart instances
+let cLtGender, cLtVet, cLtEthnicity, cLtEmp, cLtBen, cLtLang, cLtEdu; // All-time static chart instances
 let currentMonthlyData = []; // Store monthly YTD data for sorting
 let currentMonthlySortOrder = "order"; // Track current sort order
 const TL_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -717,7 +1049,7 @@ async function pushToSheets() {
   btn.disabled = true;
   btn.textContent = "Pushing…";
   try {
-    const r = await fetch(`${API_BASE}/api/push-to-sheets`, {
+    const r = await fetch(`${APP_BASE}/api/push-to-sheets`, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({year, month: m})
@@ -737,7 +1069,7 @@ async function getData(key){
   const parts = key.split(" ");
   const m = MN.indexOf(parts[0]) + 1;
   const year = parts[1];
-  const url = `${API_BASE}/api/dashboard?year=${year}&month=${m}&trend_months=${currentTrendSpan}`;
+  const url = `${APP_BASE}/api/dashboard?year=${year}&month=${m}&trend_months=${currentTrendSpan}`;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 45000); // 45s timeout
   try {
@@ -747,7 +1079,7 @@ async function getData(key){
     return r.json();
   } catch(e) {
     clearTimeout(timer);
-    if(e.name === "AbortError") throw new Error("Request timed out (45s). API mode makes many calls — try SQL mode for instant results.");
+    if(e.name === "AbortError") throw new Error("Request timed out (45s). SQL mode is taking longer than expected.");
     throw e;
   }
 }
@@ -1217,6 +1549,48 @@ const PROG_COLORS = {drive:"#14532D", choice:"#0F766E", mobile:"#B45309", fresh:
 const PROG_LABELS = {drive:"Drive Through", choice:"Choice Pantry", mobile:"Mobile Pantry", fresh:"Fresh Start"};
 const COUNTY_ORDER = ["Clermont","Hamilton","Brown","Highland","Adams","Clinton","Warren","Other"];
 
+// ── Static all-time program data (Oasis Agency Assistance by Category, pulled 4/17/2026) ──
+const PROGRAM_LIFETIME = [
+  {label:"Drive Thru Pantry",      records:38666, hh:6065, members:19148, pounds:1278002, bags:0,     color:"#14532D"},
+  {label:"Mobile Pantry",          records:15320, hh:6067, members:18514, pounds:464220,  bags:177,   color:"#B45309"},
+  {label:"Choice Pantry",          records:18557, hh:4427, members:13807, pounds:611940,  bags:0,     color:"#0F766E"},
+  {label:"Period Kits",            records:8641,  hh:2831, members:10969, pounds:390,     bags:8642,  color:"#7C3AED"},
+  {label:"Sweet Cheeks Diapers",   records:6067,  hh:1585, members:7073,  pounds:0,       bags:13477, color:"#DB2777"},
+  {label:"Diapers (bulk)",         records:1168,  hh:522,  members:2525,  pounds:0,       bags:2364,  color:"#EC4899"},
+  {label:"Clothing Voucher",       records:854,   hh:665,  members:2311,  pounds:0,       bags:858,   color:"#6B7280"},
+  {label:"Senior Box",             records:1559,  hh:415,  members:1099,  pounds:62360,   bags:0,     color:"#D97706"},
+  {label:"Evening Drive Thru",     records:901,   hh:442,  members:1498,  pounds:30450,   bags:0,     color:"#1D4ED8"},
+  {label:"Fresh Start Kitchen",    records:270,   hh:264,  members:674,   pounds:106600,  bags:0,     color:"#059669"},
+  {label:"Door Dash",              records:504,   hh:111,  members:245,   pounds:15120,   bags:0,     color:"#0284C7"},
+];
+// Updated from Agency Assistance by Demographics report (117,553 records — broader scope than Category report)
+const LIFETIME_TOTALS = {
+  records:117553, uniqueHH:13615, members:40481,
+  dupHH:117553, dupMembers:401079,
+  pounds:3264491, bags:30416, homeless:243
+};
+
+// ── All-time demographic breakdowns (Agency Assistance by Demographics, 4/17/2026) ──
+// All values = unique "Households assisted" per demographic group
+const DEMO_LIFETIME = {
+  gender:     {"Female":10068,"Male":4067,"Transgender":29,"Non-Conforming":69,"Prefer not to say":7},
+  ethnicity:  {"White/Caucasian":8344,"Black/African-American":284,"Hispanic":215,"Asian":191,"Multi-Racial":175,"Prefer not to say":90,"Native American":53,"Uzbekistan":46,"Middle Eastern":34,"Pacific Islander":5},
+  employment: {"Unemployed":2853,"Retired":1652,"Full time":1502,"Part time":1113,"Stay at Home Caretaker":1016,"Disabled":825,"Other":310},
+  benefits:   {"Medicaid":1586,"Social Security":1018,"SNAP":1034,"None":1273,"Medicare":887,"Disability":636,"WIC":225,"Veterans Benefits":70,"TANF":39},
+  education:  {"Highschool/GED":1926,"College":824,"Highschool-Incomplete":495},
+  language:   {"English":3659,"Spanish":86,"Uzbek":17,"Arabic":7,"Other":11,"Chinese":1},
+  veteran:    {"No":4035,"Yes":304},
+  ageMembers: {ch:12642, ad:19485, sr:7059, uk:1294},
+  homeless:   243
+};
+
+// ── TEFAP program totals (Agency TEFAP Forms Report, 4/17/2026) ──
+const TEFAP_TOTALS = {
+  forms:16000, hoh:11047, households:10918, members:33406, homeless:159,
+  age:{ch:10210, ad:16243, sr:6028, uk:925},
+  gender:{"Female":8006,"Male":2971,"Transgender":18,"Non-Conforming":47,"Prefer not to say":4}
+};
+
 function renderCountyCards(ytdData) {
   // Build YTD lookup by county name
   const ytdMap = {};
@@ -1274,8 +1648,388 @@ function renderCountyCards(ytdData) {
   document.getElementById("countyCardGrid").innerHTML = html;
 }
 
+function renderAllTimeCharts() {
+  const GCOLS  = ["#14532D","#0F766E","#B45309","#7C3AED","#9CA3AF"];
+  const ECOLS  = ["#14532D","#0F766E","#B45309","#1D4ED8","#7C3AED","#DB2777","#D97706","#059669","#0284C7","#6B7280"];
+  const EMCOLS = ["#14532D","#0F766E","#B45309","#1D4ED8","#7C3AED","#DB2777","#D97706"];
+  const BNCOLS = ["#14532D","#0F766E","#B45309","#1D4ED8","#7C3AED","#DB2777","#D97706","#059669","#0284C7"];
+  const LGCOLS = ["#14532D","#0F766E","#B45309","#1D4ED8","#7C3AED","#9CA3AF"];
+  const VCOLS  = ["#14532D","#0F766E","#9CA3AF"];
+
+  // Gender doughnut
+  const gK = Object.keys(DEMO_LIFETIME.gender), gV = gK.map(k=>DEMO_LIFETIME.gender[k]), gT = gV.reduce((a,b)=>a+b,0)||1;
+  if(cLtGender) cLtGender.destroy();
+  cLtGender = new Chart(document.getElementById("cLtGender"),{type:"doughnut",
+    data:{labels:gK,datasets:[{data:gV,backgroundColor:GCOLS,borderWidth:0,hoverOffset:5}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"66%",
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed)} HH (${(ctx.parsed/gT*100).toFixed(1)}%)`}}}}});
+  document.getElementById("lLtGender").innerHTML=gK.map((k,i)=>`
+    <div class="leg-row"><div class="leg-l"><div class="leg-dot" style="background:${GCOLS[i]}"></div><span class="leg-name">${k}</span></div>
+    <span><span class="leg-v">${fmt(gV[i])}</span><span class="leg-pct">${(gV[i]/gT*100).toFixed(1)}%</span></span></div>`).join("");
+
+  // Veteran doughnut
+  const vK = Object.keys(DEMO_LIFETIME.veteran), vV = vK.map(k=>DEMO_LIFETIME.veteran[k]), vT = vV.reduce((a,b)=>a+b,0)||1;
+  if(cLtVet) cLtVet.destroy();
+  cLtVet = new Chart(document.getElementById("cLtVet"),{type:"doughnut",
+    data:{labels:vK,datasets:[{data:vV,backgroundColor:VCOLS,borderWidth:0,hoverOffset:5}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"66%",
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed)} HH (${(ctx.parsed/vT*100).toFixed(1)}%)`}}}}});
+  document.getElementById("lLtVet").innerHTML=vK.map((k,i)=>`
+    <div class="leg-row"><div class="leg-l"><div class="leg-dot" style="background:${VCOLS[i]}"></div><span class="leg-name">${k}</span></div>
+    <span><span class="leg-v">${fmt(vV[i])}</span><span class="leg-pct">${(vV[i]/vT*100).toFixed(1)}%</span></span></div>`).join("");
+
+  // Ethnicity bar
+  const eK=Object.keys(DEMO_LIFETIME.ethnicity).sort((a,b)=>DEMO_LIFETIME.ethnicity[b]-DEMO_LIFETIME.ethnicity[a]);
+  const eV=eK.map(k=>DEMO_LIFETIME.ethnicity[k]), eT=eV.reduce((a,b)=>a+b,0)||1;
+  if(cLtEthnicity) cLtEthnicity.destroy();
+  cLtEthnicity = new Chart(document.getElementById("cLtEthnicity"),{type:"bar",
+    data:{labels:eK,datasets:[{data:eV,backgroundColor:ECOLS,borderRadius:4,borderWidth:0}]},
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.x)} HH (${(ctx.parsed.x/eT*100).toFixed(1)}%)`}}},
+      scales:{x:{grid:{color:"rgba(0,0,0,.05)"},ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+"K":v,font:{size:10}},border:{display:false}},
+              y:{grid:{display:false},ticks:{font:{size:11}},border:{display:false}}}}});
+
+  // Employment bar
+  const empK=Object.keys(DEMO_LIFETIME.employment).sort((a,b)=>DEMO_LIFETIME.employment[b]-DEMO_LIFETIME.employment[a]);
+  const empV=empK.map(k=>DEMO_LIFETIME.employment[k]), empT=empV.reduce((a,b)=>a+b,0)||1;
+  if(cLtEmp) cLtEmp.destroy();
+  cLtEmp = new Chart(document.getElementById("cLtEmp"),{type:"bar",
+    data:{labels:empK,datasets:[{data:empV,backgroundColor:EMCOLS,borderRadius:4,borderWidth:0}]},
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.x)} HH (${(ctx.parsed.x/empT*100).toFixed(1)}%)`}}},
+      scales:{x:{grid:{color:"rgba(0,0,0,.05)"},ticks:{callback:v=>v>=1000?(v/1000).toFixed(1)+"K":v,font:{size:10}},border:{display:false}},
+              y:{grid:{display:false},ticks:{font:{size:11}},border:{display:false}}}}});
+
+  // Government Benefits bar
+  const bnK=Object.keys(DEMO_LIFETIME.benefits).sort((a,b)=>DEMO_LIFETIME.benefits[b]-DEMO_LIFETIME.benefits[a]);
+  const bnV=bnK.map(k=>DEMO_LIFETIME.benefits[k]);
+  if(cLtBen) cLtBen.destroy();
+  cLtBen = new Chart(document.getElementById("cLtBen"),{type:"bar",
+    data:{labels:bnK,datasets:[{data:bnV,backgroundColor:BNCOLS,borderRadius:4,borderWidth:0}]},
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.x)} HH`}}},
+      scales:{x:{grid:{color:"rgba(0,0,0,.05)"},ticks:{callback:v=>v>=1000?(v/1000).toFixed(1)+"K":v,font:{size:10}},border:{display:false}},
+              y:{grid:{display:false},ticks:{font:{size:11}},border:{display:false}}}}});
+
+  // Language bar
+  const lgK=Object.keys(DEMO_LIFETIME.language).sort((a,b)=>DEMO_LIFETIME.language[b]-DEMO_LIFETIME.language[a]);
+  const lgV=lgK.map(k=>DEMO_LIFETIME.language[k]), lgT=lgV.reduce((a,b)=>a+b,0)||1;
+  if(cLtLang) cLtLang.destroy();
+  cLtLang = new Chart(document.getElementById("cLtLang"),{type:"bar",
+    data:{labels:lgK,datasets:[{data:lgV,backgroundColor:LGCOLS,borderRadius:4,borderWidth:0}]},
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.x)} HH (${(ctx.parsed.x/lgT*100).toFixed(1)}%)`}}},
+      scales:{x:{grid:{color:"rgba(0,0,0,.05)"},ticks:{font:{size:10}},border:{display:false}},
+              y:{grid:{display:false},ticks:{font:{size:11}},border:{display:false}}}}});
+
+  // Education bar
+  const edK=Object.keys(DEMO_LIFETIME.education).sort((a,b)=>DEMO_LIFETIME.education[b]-DEMO_LIFETIME.education[a]);
+  const edV=edK.map(k=>DEMO_LIFETIME.education[k]), edT=edV.reduce((a,b)=>a+b,0)||1;
+  if(cLtEdu) cLtEdu.destroy();
+  cLtEdu = new Chart(document.getElementById("cLtEdu"),{type:"bar",
+    data:{labels:edK,datasets:[{data:edV,backgroundColor:["#14532D","#0F766E","#B45309"],borderRadius:4,borderWidth:0}]},
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.x)} HH (${(ctx.parsed.x/edT*100).toFixed(1)}%)`}}},
+      scales:{x:{grid:{color:"rgba(0,0,0,.05)"},ticks:{font:{size:10}},border:{display:false}},
+              y:{grid:{display:false},ticks:{font:{size:11}},border:{display:false}}}}});
+}
+
+function renderLifetimeCharts() {
+  // Households by program — all programs sorted descending
+  const byHH = [...PROGRAM_LIFETIME].sort((a,b) => b.hh - a.hh);
+  if (cProgLifetime) cProgLifetime.destroy();
+  cProgLifetime = new Chart(document.getElementById("cProgLifetime"), {
+    type: "bar",
+    data: {
+      labels: byHH.map(p => p.label),
+      datasets: [{data: byHH.map(p => p.hh), backgroundColor: byHH.map(p => p.color), borderRadius: 4, borderWidth: 0}]
+    },
+    options: {
+      indexAxis: "y", responsive: true, maintainAspectRatio: false,
+      plugins: {legend: {display:false}, tooltip: {callbacks: {label: ctx => ` ${fmt(ctx.parsed.x)} households · ${fmt(byHH[ctx.dataIndex].records)} records`}}},
+      scales: {
+        x: {grid:{color:"rgba(0,0,0,.05)"}, ticks:{callback:v=>v>=1000?(v/1000).toFixed(1)+"K":v, font:{size:10}}, border:{display:false}},
+        y: {grid:{display:false}, ticks:{font:{size:11}}, border:{display:false}}
+      }
+    }
+  });
+
+  // Pounds by food program (programs with pounds > 0), sorted descending
+  const byLbs = PROGRAM_LIFETIME.filter(p => p.pounds > 0).sort((a,b) => b.pounds - a.pounds);
+  if (cPoundsLifetime) cPoundsLifetime.destroy();
+  cPoundsLifetime = new Chart(document.getElementById("cPoundsLifetime"), {
+    type: "bar",
+    data: {
+      labels: byLbs.map(p => p.label),
+      datasets: [{data: byLbs.map(p => p.pounds), backgroundColor: byLbs.map(p => p.color), borderRadius: 4, borderWidth: 0}]
+    },
+    options: {
+      indexAxis: "y", responsive: true, maintainAspectRatio: false,
+      plugins: {legend: {display:false}, tooltip: {callbacks: {label: ctx => ` ${fmt(ctx.parsed.x)} lbs`}}},
+      scales: {
+        x: {grid:{color:"rgba(0,0,0,.05)"}, ticks:{callback:v=>v>=1000000?(v/1000000).toFixed(1)+"M":v>=1000?(v/1000).toFixed(0)+"K":v, font:{size:10}}, border:{display:false}},
+        y: {grid:{display:false}, ticks:{font:{size:11}}, border:{display:false}}
+      }
+    }
+  });
+}
+
+// ── ZIP code data (Agency Assistance by Household, 4/17/2026) ──
+// Full list: 13,615 households, 40,481 members across all ZIP codes
+const ZIP_DATA = [
+  // [zip, households, members, area label]
+  ["none",   1184, 2168,  "No ZIP recorded"],
+  ["45103",  1633, 5191,  "Milford, OH"],
+  ["45102",  1337, 4093,  "Amelia, OH"],
+  ["45106",   761, 2397,  "Bethel, OH"],
+  ["45244",  1063, 3076,  "Anderson Twp, OH"],
+  ["45245",   802, 2201,  "Union Twp, OH"],
+  ["45255",   474, 1405,  "Anderson Twp, OH"],
+  ["45176",   499, 1529,  "Williamsburg, OH"],
+  ["45157",   488, 1538,  "New Richmond, OH"],
+  ["45150",   492, 1508,  "Milford, OH"],
+  ["45122",   486, 1611,  "Goshen Twp, OH"],
+  ["45230",   426, 1294,  "Cincinnati, OH"],
+  ["45140",   290, 1014,  "Loveland, OH"],
+  ["45154",   313,  955,  "Williamsburg, OH"],
+  ["45120",   382, 1126,  "Felicity, OH"],
+  ["45142",   213,  774,  "Lynchburg, OH"],
+  ["45121",   292,  787,  "Georgetown, OH"],
+  ["45130",   219,  632,  "Georgetown area, OH"],
+  ["45171",   127,  413,  "Ripley, OH"],
+  ["45693",   128,  349,  "West Union area, OH"],
+  ["45153",   119,  370,  "Neville, OH"],
+  ["45118",    97,  314,  "Batavia area, OH"],
+  ["45133",    95,  324,  "Hillsboro, OH"],
+  ["45160",    68,  182,  "Owensville, OH"],
+  ["45101",    71,  229,  "Aberdeen, OH"],
+  ["45697",    49,  184,  "Williamsburg area, OH"],
+  ["45107",    62,  209,  "Washington CH area"],
+  ["45167",    69,  217,  "Ripley, OH"],
+  ["45162",    39,  138,  "Newtonsville, OH"],
+  ["45227",    84,  250,  "Cincinnati, OH"],
+  ["45226",    52,  144,  "Cincinnati, OH"],
+  ["45211",    39,   92,  "Cincinnati, OH"],
+  ["45212",    41,  130,  "Cincinnati, OH"],
+  ["45152",    19,   68,  "Morrow, OH"],
+  ["45039",    15,   41,  "Mason, OH"],
+  ["45040",    16,   47,  "Mason, OH"],
+  ["45660",    42,  140,  "Peebles, OH"],
+  ["45679",    30,   96,  "Ripley area, OH"],
+  ["45158",    22,   57,  "New Richmond area"],
+  ["45229",    24,   91,  "Cincinnati, OH"],
+  ["45205",    27,  110,  "Cincinnati, OH"],
+  ["45144",    38,   95,  "Sardinia, OH"],
+  ["45238",    26,   75,  "Cincinnati, OH"],
+  ["45237",    25,   89,  "Cincinnati, OH"],
+  ["45215",    25,   82,  "Cincinnati, OH"],
+  ["45216",    24,  102,  "Cincinnati, OH"],
+  ["45206",    19,   60,  "Cincinnati, OH"],
+  ["45159",    13,   46,  "Williamsburg area"],
+  ["45217",    13,   44,  "Cincinnati, OH"],
+  ["41056",    38,  110,  "Maysville, KY"],
+];
+
+// Regional groupings for the donut
+const ZIP_REGIONS = [
+  {name:"Clermont County", color:"#14532D", prefixes:["451"], exclude:["45200","45201","45202","45203","45204","45205","45206","45207","45208","45209","45210","45211","45212","45213","45214","45215","45216","45217","45218","45219","45220","45221","45222","45223","45224","45225","45226","45227","45228","45229","45230","45231","45232","45233","45234","45235","45236","45237","45238","45239","45240","45241","45242","45243","45244","45245","45246","45247","45248","45249","45250","45251","45252","45253","45254","45255","45256","45257","45258","45259","45260","45261","45262","45263","45264","45265","45266","45267","45268","45269","45270","45271","45272","45273","45274","45275","45276","45277","45278","45279","45280","45281","45282","45283","45284","45285","45286","45287","45288","45289","45290","45291","45292","45293","45294","45295","45296","45297","45298","45299"]},
+  {name:"Hamilton Co. / Cincinnati", color:"#0F766E", prefixes:["452"]},
+  {name:"Brown / Adams Co.", color:"#B45309", prefixes:["456","457"]},
+  {name:"Northern Kentucky", color:"#1D4ED8", prefixes:["410","411","412","413","414","415","416","417","418","419","420","421","422","423","424","425","426","427"]},
+  {name:"No ZIP Recorded", color:"#9CA3AF", prefixes:["none"]},
+  {name:"Other / Out of Area", color:"#E5E7EB", prefixes:[]},
+];
+
+function classifyZip(zip) {
+  if (zip === "none") return "No ZIP Recorded";
+  const s = zip.toString();
+  const prefix3 = s.slice(0,3);
+  const prefix5 = s;
+  // Hamilton County: 452xx
+  if (prefix3 === "452") return "Hamilton Co. / Cincinnati";
+  // Brown/Adams: 456xx, 457xx
+  if (prefix3 === "456" || prefix3 === "457") return "Brown / Adams Co.";
+  // Northern KY: 41xxx, 42xxx
+  if (s.startsWith("41") || s.startsWith("42")) return "Northern Kentucky";
+  // Clermont County: 451xx (minus 452xx which is Cincinnati)
+  if (prefix3 === "451") return "Clermont County";
+  // Out of area
+  return "Other / Out of Area";
+}
+
+let cZipBar, cZipRegion, cZipAvgSize, cZipScatter;
+
+function renderZipCharts() {
+  // Sort by HH descending, put "none" at end
+  const sorted = [...ZIP_DATA].sort((a,b) => {
+    if (a[0]==="none") return 1;
+    if (b[0]==="none") return -1;
+    return b[1] - a[1];
+  });
+
+  // Top 20 for bar chart
+  const top20 = sorted.filter(d=>d[0]!=="none").slice(0,20);
+
+  // Bar chart: top 20 ZIPs
+  if (cZipBar) cZipBar.destroy();
+  cZipBar = new Chart(document.getElementById("cZipBar"), {
+    type: "bar",
+    data: {
+      labels: top20.map(d => d[0]),
+      datasets: [{
+        label: "Households",
+        data: top20.map(d => d[1]),
+        backgroundColor: top20.map((d,i) => i < 5 ? "#14532D" : i < 10 ? "#15803D" : "#22C55E"),
+        borderRadius: 4, borderWidth: 0
+      }]
+    },
+    options: {
+      indexAxis: "y", responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {display:false},
+        tooltip: {callbacks: {label: ctx => {
+          const d = top20[ctx.dataIndex];
+          return [` ${fmt(d[1])} households · ${fmt(d[2])} members`, ` ${d[3]}`];
+        }}}
+      },
+      scales: {
+        x: {grid:{color:"rgba(0,0,0,.05)"}, ticks:{font:{size:10}}, border:{display:false}},
+        y: {grid:{display:false}, ticks:{font:{size:11,family:"'DM Mono',monospace"},color:"#374151"}, border:{display:false}}
+      }
+    }
+  });
+
+  // Regional donut
+  const regionTotals = {};
+  ZIP_REGIONS.forEach(r => { regionTotals[r.name] = {hh:0, members:0, color:r.color}; });
+  ZIP_DATA.forEach(([zip, hh, members]) => {
+    const region = classifyZip(zip);
+    if (!regionTotals[region]) regionTotals[region] = {hh:0, members:0, color:"#E5E7EB"};
+    regionTotals[region].hh += hh;
+    regionTotals[region].members += members;
+  });
+  const regionArr = Object.entries(regionTotals).filter(([,v])=>v.hh>0).sort((a,b)=>b[1].hh-a[1].hh);
+  const totalHH = 13615;
+
+  if (cZipRegion) cZipRegion.destroy();
+  cZipRegion = new Chart(document.getElementById("cZipRegion"), {
+    type: "doughnut",
+    data: {
+      labels: regionArr.map(([name]) => name),
+      datasets: [{
+        data: regionArr.map(([,v]) => v.hh),
+        backgroundColor: regionArr.map(([,v]) => v.color),
+        borderWidth: 0, hoverOffset: 5
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false, cutout:"60%",
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>{
+          const [name,v] = regionArr[ctx.dataIndex];
+          return ` ${fmt(v.hh)} HH (${(v.hh/totalHH*100).toFixed(1)}%)`;
+        }}}
+      }
+    }
+  });
+  document.getElementById("lZipRegion").innerHTML = regionArr.map(([name,v]) => `
+    <div class="leg-row">
+      <div class="leg-l"><div class="leg-dot" style="background:${v.color}"></div><span class="leg-name">${name}</span></div>
+      <span><span class="leg-v">${fmt(v.hh)}</span><span class="leg-pct">${(v.hh/totalHH*100).toFixed(1)}%</span></span>
+    </div>`).join("");
+
+  // Avg HH size for top 25 non-"none" ZIPs
+  const top25 = sorted.filter(d=>d[0]!=="none").slice(0,25);
+  if (cZipAvgSize) cZipAvgSize.destroy();
+  cZipAvgSize = new Chart(document.getElementById("cZipAvgSize"), {
+    type: "bar",
+    data: {
+      labels: top25.map(d => d[0]),
+      datasets: [{
+        label: "Avg Members/HH",
+        data: top25.map(d => parseFloat((d[2]/d[1]).toFixed(2))),
+        backgroundColor: top25.map(d => {
+          const avg = d[2]/d[1];
+          return avg >= 4 ? "#14532D" : avg >= 3 ? "#15803D" : "#22C55E";
+        }),
+        borderRadius: 4, borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>{
+          const d = top25[ctx.dataIndex];
+          return ` ${(d[2]/d[1]).toFixed(2)} avg · ${fmt(d[1])} HH · ${fmt(d[2])} members`;
+        }}}
+      },
+      scales:{
+        x:{grid:{display:false}, ticks:{font:{size:9,family:"'DM Mono',monospace"},maxRotation:45}, border:{display:false}},
+        y:{grid:{color:"rgba(0,0,0,.05)"}, ticks:{font:{size:10}}, border:{display:false}, min:1}
+      }
+    }
+  });
+
+  // Scatter: HH vs members for top 25
+  if (cZipScatter) cZipScatter.destroy();
+  cZipScatter = new Chart(document.getElementById("cZipScatter"), {
+    type: "bubble",
+    data: {
+      datasets: [{
+        label: "ZIP Codes",
+        data: top25.map(d => ({x: d[1], y: d[2], r: Math.max(4, Math.sqrt(d[1])/2.5), zip: d[0], area: d[3]})),
+        backgroundColor: top25.map((d,i) => i<5?"rgba(20,83,45,0.75)":i<10?"rgba(21,128,61,0.65)":"rgba(34,197,94,0.55)"),
+        borderColor: "rgba(0,0,0,0.1)", borderWidth: 1
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>{
+          const d = ctx.raw;
+          return [`ZIP ${d.zip} · ${d.area}`,` ${fmt(d.x)} households · ${fmt(d.y)} members`,` Avg size: ${(d.y/d.x).toFixed(2)}`];
+        }}}
+      },
+      scales:{
+        x:{title:{display:true,text:"Households",font:{size:11}}, grid:{color:"rgba(0,0,0,.05)"}, border:{display:false}, ticks:{callback:v=>v>=1000?(v/1000).toFixed(1)+"K":v}},
+        y:{title:{display:true,text:"Members",font:{size:11}}, grid:{color:"rgba(0,0,0,.05)"}, border:{display:false}, ticks:{callback:v=>v>=1000?(v/1000).toFixed(1)+"K":v}}
+      }
+    }
+  });
+
+  // Table: top 50
+  const top50 = sorted.slice(0,50);
+  const tbody = document.getElementById("zipTableBody");
+  tbody.innerHTML = top50.map((d, i) => {
+    const avg = (d[2]/d[1]).toFixed(2);
+    const pct = (d[1]/totalHH*100);
+    const barW = Math.round(pct * 5); // scale bar width
+    const isNone = d[0] === "none";
+    const rowBg = i % 2 === 0 ? "" : "background:rgba(0,0,0,.018)";
+    return `<tr style="${rowBg}${isNone?";color:var(--t3)":""}">
+      <td style="padding:9px 16px;font-family:'DM Mono',monospace;font-weight:600;font-size:12px;color:${isNone?"var(--t3)":"var(--g900)"}">${d[0]}</td>
+      <td style="padding:9px 16px;color:var(--t2)">${d[3]}</td>
+      <td style="padding:9px 16px;text-align:right;font-weight:600">${fmt(d[1])}</td>
+      <td style="padding:9px 16px;text-align:right;color:var(--t2)">${fmt(d[2])}</td>
+      <td style="padding:9px 16px;text-align:right;color:var(--t2)">${avg}</td>
+      <td style="padding:9px 16px;text-align:right;color:var(--t3);font-size:11px">${pct.toFixed(2)}%</td>
+      <td style="padding:9px 16px">
+        <div style="height:6px;background:var(--g200);border-radius:3px;width:120px">
+          <div style="height:100%;background:var(--g700);border-radius:3px;width:${Math.min(100,pct*5)}%"></div>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
 // Boot
 renderCountyCards([]);  // show static cards immediately before first API call
+renderAllTimeCharts();  // static all-time demographic charts from Demographics + TEFAP reports
+renderLifetimeCharts(); // static charts from Agency Assistance by Category report
+renderZipCharts();      // static ZIP code charts from Agency Assistance by Household report
 render(MONTHS[idx]);
 </script>
 </body>

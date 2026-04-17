@@ -1109,7 +1109,7 @@ def _get_dashboard_api(year, month, trend_months="12"):
         "stats":        {"mob": 0, "pop": 0, "frh": 0, "fsk": 0, "bp": 0, "pp": 0},
         "trend":        [],
         "trendSpan":    trend_months,
-        "source":       "api",
+        "source":       "sql",
         "api_note":     "Demographics show lifetime totals (API date filtering unavailable). Trend and monthly breakdown require SQL.",
     }
 
