@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPM Monthly Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --g950:#052E16;--g900:#14532D;--g700:#15803D;--g500:#22C55E;--g200:#BBF7D0;--g100:#DCFCE7;--g50:#F0FDF4;
+  --a700:#B45309;--a500:#F59E0B;--a100:#FEF3C7;
+  --bg:#F5F3EE;--surface:#FFFFFF;
+  --t1:#111827;--t2:#4B5563;--t3:#9CA3AF;
+  --bd:rgba(0,0,0,0.08);
+  --r:14px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--t1);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* ── Header ── */
+.hdr{background:var(--g900);color:#fff;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.hdr-brand{display:flex;align-items:center;gap:12px}
+.hdr-icon{width:38px;height:38px;background:rgba(255,255,255,.12);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.hdr-title{font-size:17px;font-weight:600;letter-spacing:-.3px}
+.hdr-sub{font-size:11px;opacity:.55;margin-top:1px;display:flex;align-items:center;gap:8px}
+.hdr-ctrl{display:flex;align-items:center;gap:10px}
+.month-nav{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border-radius:8px;padding:6px 14px;border:1px solid rgba(255,255,255,.12);position:relative}
+.month-nav button{background:none;border:none;color:#fff;cursor:pointer;opacity:.65;font-size:17px;padding:0 2px;line-height:1;transition:opacity .15s}
+.month-nav button:hover{opacity:1}
+.month-lbl{font-size:13px;font-weight:500;min-width:130px;text-align:center}
+
+/* ── Date Picker ── */
+.date-picker{position:absolute;top:100%;left:0;margin-top:8px;background:#fff;border:1px solid #ddd;border-radius:var(--r);padding:14px;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:1000;min-width:300px;color:#000}
+.date-picker *{color:#000}
+.date-picker-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px}
+.date-picker-header button{background:none;border:none;color:#333;cursor:pointer;font-size:14px;padding:2px 6px;font-weight:600}
+.date-picker-header button:hover{opacity:.6}
+.date-picker-header span{font-weight:600;font-size:13px;min-width:40px;text-align:center;color:#333}
+.date-picker-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.date-btn{background:#f5f5f5;border:1px solid #ddd;color:#2e7d32 !important;border-radius:6px;padding:6px;cursor:pointer;font-size:11px;font-weight:700;transition:all .15s}
+.date-btn:hover{background:#e8f5e9;border-color:#4caf50}
+.date-btn.active{background:#2e7d32 !important;color:#fff !important;border-color:#2e7d32}
+.hdr-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:8px;padding:7px 15px;cursor:pointer;font-size:12px;font-weight:500;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background .15s}
+.hdr-btn:hover{background:rgba(255,255,255,.22)}
+
+/* ── Trend buttons ── */
+.trend-btn{background:var(--surface);border:1px solid var(--bd);color:var(--t1);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:500;font-family:inherit;transition:all .15s}
+.trend-btn:hover{background:var(--g100);border-color:var(--g500)}
+.trend-btn.active{background:var(--g900);color:#fff;border-color:var(--g700)}
+
+/* ── Source badge ── */
+.src-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.05em;display:inline-block;opacity:1}
+.src-badge.sql{background:rgba(251,191,36,.25);color:#fde68a}
+
+/* ── Tooltips ── */
+.source-title{position:relative;cursor:help;border-bottom:1px dotted #999}
+.source-title::after{content:attr(data-source);position:absolute;bottom:120%;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:8px 12px;border-radius:6px;font-size:11px;white-space:normal;width:clamp(240px,28vw,300px);line-height:1.35;text-align:left;z-index:10000;opacity:0;pointer-events:none;transition:opacity .2s;box-shadow:0 4px 8px rgba(0,0,0,.25)}
+.source-title:hover::after{opacity:1}
+
+/* ── Main ── */
+.main{padding:24px 28px;max-width:1380px;margin:0 auto}
+.dash-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.dash-tab-btn{background:var(--surface);border:1px solid var(--bd);border-radius:999px;padding:8px 14px;cursor:pointer;font-size:12px;font-weight:600;color:var(--t2);font-family:inherit;transition:all .15s}
+.dash-tab-btn:hover{border-color:var(--g500);color:var(--g900)}
+.dash-tab-btn.active{background:var(--g900);border-color:var(--g900);color:#fff}
+.dash-panel{display:none}
+.dash-panel.active{display:block}
+.sec-lbl{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--t3);margin-bottom:11px}
+
+/* ── Metric cards ── */
+.m-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.m-card{background:var(--surface);border-radius:var(--r);padding:18px 22px;border:1px solid var(--bd)}
+.m-card.hero{background:var(--g900);color:#fff}
+.m-lbl{font-size:11.5px;color:var(--t2);font-weight:500;margin-bottom:6px}
+.m-card.hero .m-lbl{color:rgba(255,255,255,.6)}
+.m-val{font-size:30px;font-weight:600;letter-spacing:-.5px;line-height:1;margin-bottom:6px}
+.m-sub{font-size:11.5px;color:var(--t3)}
+.m-card.hero .m-sub{color:rgba(255,255,255,.45)}
+.chg{font-size:12px;margin-bottom:3px}
+.pos{color:#16A34A}.neg{color:#DC2626}
+.m-card.hero .pos,.m-card.hero .neg{color:rgba(255,255,255,.75)}
+
+/* ── Chart cards ── */
+.c-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:22px}
+.c-card{background:var(--surface);border-radius:var(--r);padding:18px 22px;border:1px solid var(--bd)}
+.c-title{font-size:12.5px;font-weight:600;margin-bottom:14px;color:var(--t1)}
+.legend{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+.leg-row{display:flex;align-items:center;justify-content:space-between;font-size:12px}
+.leg-l{display:flex;align-items:center;gap:7px}
+.leg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.leg-name{color:var(--t2)}
+.leg-v{font-weight:600;color:var(--t1)}
+.leg-pct{font-size:10.5px;color:var(--t3);margin-left:3px}
+
+/* ── County card ── */
+.county-card{background:var(--surface);border-radius:var(--r);padding:18px 22px;border:1px solid var(--bd);margin-bottom:22px}
+
+/* ── Stats boxes ── */
+.s-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:22px}
+.s-box{background:var(--surface);border-radius:var(--rs);padding:16px 12px;border:1px solid var(--bd);text-align:center}
+.s-ico{font-size:19px;margin-bottom:7px;display:block}
+.s-val{font-size:26px;font-weight:600;color:var(--g900);line-height:1;margin-bottom:3px}
+.s-name{font-size:11px;color:var(--t2);font-weight:500;line-height:1.35}
+.s-period{font-size:10px;color:var(--t3);margin-top:3px}
+
+/* ── Notice banner ── */
+.notice{background:var(--a100);border:1px solid rgba(180,83,9,.2);border-radius:var(--rs);padding:12px 16px;margin-bottom:22px;font-size:12px;color:#92400E;display:flex;align-items:flex-start;gap:10px}
+.notice strong{font-weight:600}
+
+/* ── SQL section ── */
+.sql-wrap{background:var(--surface);border-radius:var(--r);border:1px solid var(--bd);overflow:hidden;margin-bottom:24px}
+.sql-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;user-select:none;background:var(--g50);border-bottom:1px solid var(--bd)}
+.sql-hdr-l{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:var(--g900)}
+.sql-body{display:block;padding:22px}
+.sql-tabs{display:flex;gap:3px;border-bottom:1px solid var(--bd);margin-bottom:16px;flex-wrap:wrap}
+.sql-tab{padding:7px 14px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s}
+.sql-tab:hover{color:var(--t1)}
+.sql-tab.active{color:var(--g700);border-bottom-color:var(--g700)}
+.sql-panel{display:none}
+.sql-panel.active{display:block}
+.sql-blk{margin-bottom:18px}
+.sql-blk:last-child{margin-bottom:0}
+.sql-blk-lbl{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--t2);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.cp-btn{background:none;border:1px solid var(--bd);border-radius:4px;padding:2px 9px;font-size:10px;cursor:pointer;color:var(--t2);font-family:inherit;text-transform:none;letter-spacing:0;font-weight:400;transition:background .1s}
+.cp-btn:hover{background:var(--bg)}
+pre{background:#1A1D23;color:#ABB2BF;border-radius:var(--rs);padding:14px 16px;font-family:'DM Mono',monospace;font-size:11.5px;line-height:1.7;overflow-x:auto}
+.kw{color:#C678DD}.fn{color:#61AFEF}.str{color:#98C379}.cm{color:#5C6370;font-style:italic}.nm{color:#D19A66}
+
+/* ── Loading overlay ── */
+.loading-bar{position:fixed;top:0;left:0;width:100%;height:3px;background:var(--g500);z-index:9999;transform:scaleX(0);transform-origin:left;transition:transform .3s ease;pointer-events:none}
+.loading-bar.active{animation:loadpulse 1.2s ease-in-out infinite}
+@keyframes loadpulse{0%{transform:scaleX(0);opacity:1}60%{transform:scaleX(.7);opacity:1}100%{transform:scaleX(1);opacity:0}}
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(255,255,255,.45);z-index:500;align-items:center;justify-content:center}
+.loading-overlay.active{display:flex}
+.loading-spinner{width:36px;height:36px;border:3px solid var(--g200);border-top-color:var(--g700);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err-banner{background:#FEE2E2;border:1px solid #FECACA;border-radius:var(--rs);padding:12px 16px;margin-bottom:18px;font-size:12px;color:#991B1B;display:none}
+.err-banner.active{display:block}
+.warn-banner{background:#FEF3C7;border:1px solid #FDE68A;border-radius:var(--rs);padding:12px 16px;margin-bottom:18px;font-size:12px;color:#92400E;display:none}
+.warn-banner.active{display:block}
+
+/* ── County stat cards ── */
+.county-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.cnty-card{background:var(--surface);border-radius:var(--r);padding:16px 18px;border:1px solid var(--bd);border-top:3px solid var(--g700)}
+.cnty-card.other{border-top-color:var(--t3)}
+.cnty-name{font-size:12.5px;font-weight:700;color:var(--g900);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.cnty-total{font-size:22px;font-weight:600;letter-spacing:-.5px;line-height:1;margin-bottom:2px}
+.cnty-sub{font-size:10.5px;color:var(--t3);margin-bottom:10px}
+.cnty-row{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;padding:3px 0;border-bottom:1px solid rgba(0,0,0,.04)}
+.cnty-row:last-child{border-bottom:none}
+.cnty-row-lbl{color:var(--t2);display:flex;align-items:center;gap:5px}
+.cnty-row-val{font-weight:600;color:var(--t1)}
+.cnty-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0;display:inline-block}
+.cnty-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;background:var(--g100);color:var(--g700);white-space:nowrap}
+.cnty-age-row{display:flex;justify-content:space-between;font-size:11px;padding:2px 0;color:var(--t3)}
+.cnty-age-row span{font-weight:500;color:var(--t2)}
+@media(max-width:1200px){.county-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:800px){.county-grid{grid-template-columns:1fr 1fr}}
+
+/* ── Footer ── */
+.footer{text-align:center;font-size:11px;color:var(--t3);padding:16px 0 32px}
+
+/* ── Print ── */
+@media print{.hdr{position:relative}.hdr-btn,.sql-wrap,.notice,.dash-tabs{display:none!important}.main{padding:10px}}
+
+/* ── Responsive ── */
+@media(max-width:1100px){.m-grid{grid-template-columns:repeat(2,1fr)}.s-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:800px){.main{padding:14px}.c-row{grid-template-columns:1fr}.s-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="loading-bar" id="loadBar"></div>
+<div class="loading-overlay" id="loadOverlay"><div class="loading-spinner"></div></div>
+
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-icon">🌿</div>
+    <div>
+      <div class="hdr-title">IPM Monthly Dashboard</div>
+      <div class="hdr-sub">Integrated Pantry Management · Oasis Data <span class="src-badge sql" id="activeBadge">SQL</span></div>
+    </div>
+  </div>
+  <div class="hdr-ctrl">
+    <div class="month-nav">
+      <button onclick="nav(-1)" title="Previous month">&#8592;</button>
+      <span class="month-lbl" id="monthLbl" onclick="toggleDatePicker()" style="cursor:pointer">March 2026</span>
+      <button onclick="nav(1)" title="Next month">&#8594;</button>
+      <div id="datePicker" class="date-picker" style="display:none">
+        <div class="date-picker-header">
+          <button onclick="datePickerNav(-1)">◀</button>
+          <span id="datePickerYear">2026</span>
+          <button onclick="datePickerNav(1)">▶</button>
+        </div>
+        <div class="date-picker-grid" id="datePickerGrid"></div>
+      </div>
+    </div>
+    <button class="hdr-btn" id="sheetBtn" onclick="pushToSheets()">&#8599; Push to Sheets</button>
+    <button class="hdr-btn" onclick="window.print()">&#10515; Export PDF</button>
+  </div>
+</header>
+
+<main class="main">
+<div class="err-banner" id="errBanner"></div>
+<div class="warn-banner" id="warnBanner"></div>
+
+  <div class="dash-tabs">
+    <button class="dash-tab-btn active" data-panel="overview" onclick="setDashboardTab('overview')">Overview</button>
+    <button class="dash-tab-btn" data-panel="monthly" onclick="setDashboardTab('monthly')">Monthly</button>
+    <button class="dash-tab-btn" data-panel="county" onclick="setDashboardTab('county')">County</button>
+    <button class="dash-tab-btn" data-panel="demographics" onclick="setDashboardTab('demographics')">Demographics</button>
+    <button class="dash-tab-btn" data-panel="reference" onclick="setDashboardTab('reference')">SQL Reference</button>
+  </div>
+
+<section class="dash-panel active" data-panel="overview">
+
+  <!-- YTD Metrics -->
+  <div class="sec-lbl">Year-to-Date Totals</div>
+  <div class="m-grid">
+    <div class="m-card hero">
+      <div class="m-lbl"><span class="source-title" data-source="Total number of household pantry visits from Jan 1 through the selected month. One household can appear more than once.">Total Household Visits</span></div>
+      <div class="m-val" id="mHH">—</div>
+      <div class="chg" id="mHHchg"></div>
+      <div class="m-sub" id="mHHper"></div>
+    </div>
+    <div class="m-card">
+      <div class="m-lbl"><span class="source-title" data-source="Estimated total people served from Jan 1 through the selected month, based on household size per visit.">Total Individual Visits</span></div>
+      <div class="m-val" id="mInd">—</div>
+      <div class="chg" id="mIndchg"></div>
+      <div class="m-sub" id="mIndper"></div>
+    </div>
+    <div class="m-card">
+      <div class="m-lbl"><span class="source-title" data-source="Total pounds distributed year-to-date for the selected period.">Pounds of Food Distributed</span></div>
+      <div class="m-val" id="mLbs">—</div>
+      <div class="chg" id="mLbschg"></div>
+      <div class="m-sub">All sources · YTD cumulative</div>
+      <div class="m-sub" id="mBags" style="margin-top:4px;font-size:11px;color:var(--t3)"></div>
+    </div>
+    <div class="m-card">
+      <div class="m-lbl"><span class="source-title" data-source="Percent change in household visits compared with the same Jan-through-month period last year.">% vs. Same Period Last Year</span></div>
+      <div class="m-val" id="mVsLY">—</div>
+      <div class="chg" id="mVschg"></div>
+      <div class="m-sub">Household visits · all programs</div>
+    </div>
+  </div>
+
+  <!-- Charts row -->
+  <div class="sec-lbl">Program &amp; Demographic Breakdown</div>
+  <div class="c-row">
+    <div class="c-card">
+      <div class="c-title"><span class="source-title" data-source="How year-to-date household visits are split across Drive Through, Choice Pantry, Mobile/FSK/Pop-up, and FRH.">Households by Program (YTD)</span></div>
+      <div style="position:relative;height:170px"><canvas id="cProg"></canvas></div>
+      <div class="legend" id="lProg"></div>
+    </div>
+    <div class="c-card">
+      <div class="c-title"><span class="source-title" data-source="Age mix of people served in Drive Through, Choice Pantry, and Mobile Pantry for the selected YTD period.">Age Distribution — D + C + M</span></div>
+      <div style="position:relative;height:170px"><canvas id="cAge"></canvas></div>
+      <div class="legend" id="lAge"></div>
+    </div>
+    <div class="c-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="c-title"><span class="source-title" data-source="Month-by-month household visits over time, using the selected trend window (1Y, 2Y, 3Y, or All).">Monthly Household Visits Trend</span></div>
+        <div style="display:flex;gap:6px">
+          <button class="trend-btn active" onclick="setTrend('12')">1Y</button>
+          <button class="trend-btn" onclick="setTrend('24')">2Y</button>
+          <button class="trend-btn" onclick="setTrend('36')">3Y</button>
+          <button class="trend-btn" onclick="setTrend('all')">All</button>
+        </div>
+      </div>
+      <div style="position:relative;height:230px"><canvas id="cTrend"></canvas></div>
+    </div>
+  </div>
+
+</section>
+
+<section class="dash-panel" data-panel="monthly">
+
+  <!-- Monthly YTD breakdown -->
+  <div class="sec-lbl">Selected Month Snapshot</div>
+  <div class="m-grid">
+    <div class="m-card hero">
+      <div class="m-lbl"><span class="source-title" data-source="Household visits in the selected month only (not cumulative).">Monthly Household Visits</span></div>
+      <div class="m-val" id="mMonthHH">—</div>
+      <div class="m-sub" id="mMonthHHSub">Selected month only</div>
+    </div>
+    <div class="m-card">
+      <div class="m-lbl"><span class="source-title" data-source="Estimated people served in the selected month only, based on household size per visit.">Monthly Individual Visits</span></div>
+      <div class="m-val" id="mMonthInd">—</div>
+      <div class="m-sub" id="mMonthIndSub">Selected month only</div>
+    </div>
+    <div class="m-card">
+      <div class="m-lbl"><span class="source-title" data-source="Pounds distributed in the selected month only.">Monthly Pounds Distributed</span></div>
+      <div class="m-val" id="mMonthLbs">—</div>
+      <div class="m-sub" id="mMonthLbsSub">Selected month only</div>
+    </div>
+    <div class="m-card">
+      <div class="m-lbl"><span class="source-title" data-source="Boxes or bags distributed in the selected month only.">Monthly Boxes / Bags</span></div>
+      <div class="m-val" id="mMonthBags">—</div>
+      <div class="m-sub" id="mMonthBagsSub">Selected month only</div>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div class="sec-lbl">Month-by-Month Year-to-Date (Cumulative)</div>
+    <div style="display:flex;gap:8px">
+      <button class="trend-btn active" onclick="sortMonthly('order')">Chronological</button>
+      <button class="trend-btn" onclick="sortMonthly('hh')">Highest HH</button>
+      <button class="trend-btn" onclick="sortMonthly('ind')">Highest Individuals</button>
+    </div>
+  </div>
+  <div class="m-grid" id="monthlyGrid">
+    <!-- Populated by JavaScript -->
+  </div>
+
+</section>
+
+<section class="dash-panel" data-panel="county">
+  <!-- County: stacked all-programs chart (YTD live) -->
+  <div class="sec-lbl">All Programs by County — Household Visits (YTD)</div>
+  <div class="county-card">
+    <div style="position:relative;height:240px"><canvas id="cCounty"></canvas></div>
+  </div>
+
+  <!-- County stat cards (lifetime data from Oasis Agency Report) -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;margin-bottom:11px">
+    <div class="sec-lbl" style="margin-bottom:0">County Statistics — All-Time Totals</div>
+    <div style="font-size:11px;color:var(--t3)">Source: Oasis Agency Assistance Report · All years &nbsp;·&nbsp; <span style="font-weight:600;color:var(--t2)" id="cntyYtdNote"></span></div>
+  </div>
+  <div class="county-grid" id="countyCardGrid"></div>
+
+</section>
+
+<section class="dash-panel" data-panel="demographics">
+  <!-- Demographics -->
+  <div class="sec-lbl">Demographics</div>
+  <div class="c-row" style="margin-bottom:22px">
+    <div class="c-card">
+      <div class="c-title">Gender</div>
+      <div style="height:180px;position:relative"><canvas id="cGender"></canvas></div>
+      <div class="legend" id="lGender"></div>
+    </div>
+    <div class="c-card" style="grid-column:span 2">
+      <div class="c-title">Ethnicity</div>
+      <div style="height:220px;position:relative"><canvas id="cEthnicity"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Veteran + Employment -->
+  <div class="c-row" style="margin-bottom:22px">
+    <div class="c-card">
+      <div class="c-title">Veteran Status</div>
+      <div style="height:160px;position:relative"><canvas id="cVet"></canvas></div>
+      <div class="legend" id="lVet"></div>
+    </div>
+    <div class="c-card" style="grid-column:span 2">
+      <div class="c-title">Employment Status</div>
+      <div style="height:200px;position:relative"><canvas id="cEmp"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Benefits + Language -->
+  <div class="c-row" style="margin-bottom:22px">
+    <div class="c-card" style="grid-column:span 2">
+      <div class="c-title">Government Benefits <span style="font-size:11px;font-weight:400;color:var(--t3)">(multi-select — counts exceed total households)</span></div>
+      <div style="height:200px;position:relative"><canvas id="cBen"></canvas></div>
+    </div>
+    <div class="c-card">
+      <div class="c-title">Primary Language</div>
+      <div style="height:200px;position:relative"><canvas id="cLang"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Education + Household Size -->
+  <div class="c-row" style="margin-bottom:22px">
+    <div class="c-card">
+      <div class="c-title">Education Level</div>
+      <div style="height:160px;position:relative"><canvas id="cEdu"></canvas></div>
+    </div>
+    <div class="c-card" style="grid-column:span 2">
+      <div class="c-title">Household Size Distribution</div>
+      <div style="height:160px;position:relative"><canvas id="cHHSize"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Bottom stats -->
+  <div class="sec-lbl">Program Activity Snapshot — Year to Date</div>
+  <div class="s-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="s-box">
+      <span class="s-ico">🚐</span>
+      <div class="s-val" id="sMob">—</div>
+      <div class="s-name"><span class="source-title" data-source="Number of Mobile Pantry event days held year-to-date.">Mobile Pantry Events</span></div>
+      <div class="s-period">YTD count</div>
+    </div>
+    <div class="s-box">
+      <span class="s-ico">🏪</span>
+      <div class="s-val" id="sPop">—</div>
+      <div class="s-name"><span class="source-title" data-source="Number of Pop-up and Senior Pop-up events held year-to-date.">Pop-up Pantry Events</span></div>
+      <div class="s-period">YTD count</div>
+    </div>
+    <div class="s-box">
+      <span class="s-ico">🏢</span>
+      <div class="s-val" id="sFRH">—</div>
+      <div class="s-name"><span class="source-title" data-source="Count of distinct partner agencies reached through Food Resource Hub events year-to-date.">Unique FRH Agencies</span></div>
+      <div class="s-period">YTD deduplicated</div>
+    </div>
+    <div class="s-box">
+      <span class="s-ico">🍳</span>
+      <div class="s-val" id="sFSK">—</div>
+      <div class="s-name"><span class="source-title" data-source="Number of Fresh Start/Re-Start Kitchen sessions year-to-date.">Fresh Start Kitchens</span></div>
+      <div class="s-period">YTD count</div>
+    </div>
+    <div class="s-box">
+      <span class="s-ico">🆕</span>
+      <div class="s-val" id="sNewFam">—</div>
+      <div class="s-name"><span class="source-title" data-source="Families whose first-ever recorded visit happened within the selected YTD period.">New Families</span></div>
+      <div class="s-period">First visit YTD</div>
+    </div>
+    <div class="s-box">
+      <span class="s-ico">🔄</span>
+      <div class="s-val" id="sRetFam">—</div>
+      <div class="s-name"><span class="source-title" data-source="Families served this YTD period that had at least one visit before Jan 1.">Returning Families</span></div>
+      <div class="s-period">Visited prior years</div>
+    </div>
+    <div class="s-box">
+      <span class="s-ico">🎒</span>
+      <div class="s-val" id="sBP">—</div>
+      <div class="s-name"><span class="source-title" data-source="Total homeless backpacks distributed year-to-date (manually reported).">Homeless Backpacks</span></div>
+      <div class="s-period">YTD total</div>
+    </div>
+    <div class="s-box">
+      <span class="s-ico">⚡</span>
+      <div class="s-val" id="sPP">—</div>
+      <div class="s-name"><span class="source-title" data-source="Total power packs distributed year-to-date (manually reported).">Power Packs</span></div>
+      <div class="s-period">YTD total</div>
+    </div>
+  </div>
+
+</section>
+
+<section class="dash-panel" data-panel="reference">
+  <!-- SQL Reference -->
+  <div class="sql-wrap">
+    <div class="sql-hdr">
+      <div class="sql-hdr-l">
+        <span style="font-size:16px">📋</span>
+        SQL Query Reference
+      </div>
+    </div>
+    <div class="sql-body" id="sqlBody">
+      <div class="sql-tabs">
+        <div class="sql-tab active" onclick="tab('mapping')">CSV ↔ SQL Mapping</div>
+        <div class="sql-tab" onclick="tab('main')">Main Programs</div>
+        <div class="sql-tab" onclick="tab('mobile')">Mobile by County</div>
+        <div class="sql-tab" onclick="tab('age')">Age Breakdown</div>
+        <div class="sql-tab" onclick="tab('events')">Events / FRH</div>
+        <div class="sql-tab" onclick="tab('ytd')">Full YTD Summary</div>
+      </div>
+
+      <!-- Mapping -->
+      <div class="sql-panel active" id="p-mapping">
+        <div class="sql-blk">
+          <div class="sql-blk-lbl">Oasis Assistance Report Field Mapping</div>
+          <pre id="qmap0">-- Core summary mapping (CSV ↔ SQL)
+-- Duplicated household count  -> COUNT(*) on assistance_assistance within date range
+-- Duplicated member count     -> SUM(COALESCE(ch.case_count,1))
+-- Household count (unique)    -> COUNT(DISTINCT aa.case_id)
+-- Assistance count            -> COUNT(*)
+
+SELECT
+  COUNT(*) AS duplicated_household_count,
+  COUNT(DISTINCT aa.case_id) AS household_count,
+  SUM(COALESCE(ch.case_count, 1)) AS duplicated_member_count,
+  COUNT(*) AS assistance_count
+FROM assistance_assistance aa
+JOIN cases_case hoh ON hoh.id = aa.case_id
+LEFT JOIN cases_household ch ON ch.id = hoh.household_id
+WHERE aa.date &gt;= '{{start_date}}' AND aa.date &lt; '{{end_exclusive}}';</pre>
+        </div>
+        <div class="sql-blk">
+          <div class="sql-blk-lbl">Demographics Mapping (EAV)</div>
+          <pre id="qmap1">-- CSV columns like Gender/Ethnicity/Employment/Veteran/Benefits/Language
+-- come from cases_casedetail (EAV model) + details tables
+
+SELECT
+  dg.name  AS detail_group,
+  dd.name  AS detail_name,
+  COUNT(DISTINCT aa.case_id) AS households
+FROM assistance_assistance aa
+JOIN cases_casedetail ccd ON ccd.case_id = aa.case_id
+JOIN details_detail dd ON dd.id = ccd.detail_id
+JOIN details_group dg ON dg.id = dd.group_id
+WHERE aa.date &gt;= '{{start_date}}' AND aa.date &lt; '{{end_exclusive}}'
+  AND dg.name IN ('Gender','Ethnicity','Employment','Veteran','Government Benefits','Language','Education')
+GROUP BY dg.name, dd.name
+ORDER BY dg.name, households DESC;</pre>
+        </div>
+        <div class="sql-blk">
+          <div class="sql-blk-lbl">Date Field Rule</div>
+          <pre id="qmap2">-- Oasis CSV "Assistance Date" matches assistance_assistance.date
+-- Use aa.date for report alignment (not entry_date fields).</pre>
+        </div>
+      </div>
+
+      <!-- Main Programs -->
+      <div class="sql-panel" id="p-main">
+        <div class="sql-blk">
+          <div class="sql-blk-lbl">Drive Through (D) — households &amp; individuals <button class="cp-btn" onclick="cp(this,'q0')">copy</button></div>
+          <pre id="q0">-- Drive Through duplicated household + member counts
+SELECT
+  COUNT(*) AS duplicated_households,
+  SUM(COALESCE(ch.case_count, 1)) AS duplicated_members
+FROM assistance_assistance aa
+JOIN assistance_category ac ON aa.category_id = ac.id
+JOIN cases_case hoh ON hoh.id = aa.case_id
+LEFT JOIN cases_household ch ON ch.id = hoh.household_id
+WHERE (ac.name LIKE '%Drive Thru%' OR ac.name LIKE '%Drive Through%'
+    OR ac.name LIKE '%Door Dash%' OR ac.name LIKE '%DoorDash%')
+  AND aa.date &gt;= '{{start_date}}' AND aa.date &lt; '{{end_exclusive}}';</pre>
+        </div>
+        <div class="sql-blk">
+          <div class="sql-blk-lbl">Choice Pantry (C) — households &amp; individuals <button class="cp-btn" onclick="cp(this,'q1')">copy</button></div>
+          <pre id="q1">-- Choice Pantry duplicated household + member counts
+SELECT
+  COUNT(*) AS duplicated_households,
+  SUM(COALESCE(ch.case_count, 1)) AS duplicated_members
+FROM assistance_assistance aa
+JOIN assistance_category ac ON aa.category_id = ac.id
+JOIN cases_case hoh ON hoh.id = aa.case_id
+LEFT JOIN cases_household ch ON ch.id = hoh.household_id
+WHERE ac.name LIKE '%Choice Pantry%'
+  AND aa.date &gt;= '{{start_date}}' AND aa.date &lt; '{{end_exclusive}}';</pre>
+        </div>
+        <div class="sql-blk">
+          <div class="sql-blk-lbl">Mobile Pantry (M) — households &amp; individuals <button class="cp-btn" onclick="cp(this,'q2')">copy</button></div>
+          <pre id="q2">-- Mobile Pantry duplicated household + member counts
+SELECT
+  COUNT(*) AS duplicated_households,
+  SUM(COALESCE(ch.case_count, 1)) AS duplicated_members
+FROM assistance_assistance aa
+JOIN assistance_category ac ON aa.category_id = ac.id
+JOIN cases_case hoh ON hoh.id = aa.case_id
+LEFT JOIN cases_household ch ON ch.id = hoh.household_id
+WHERE ac.name = 'Mobile Pantry'
+  AND aa.date &gt;= '{{start_date}}' AND aa.date &lt; '{{end_exclusive}}';</pre>
+        </div>
+      </div>
+
+      <!-- Mobile by County -->
+      <div class="sql-panel" id="p-mobile">
+        <div class="sql-blk">
+          <div class="sql-blk-lbl">Mobile Pantry by County — with vs. without children <button class="cp-btn" onclick="cp(this,'q3')">copy</button></div>
+          <pre id="q3">-- Mobile Pantry by county with/without children
+SELECT
+  COALESCE(dc.name, 'Other') AS county,
+  SUM(CASE WHEN ch.max_dob &gt; DATE_SUB(CURDATE(), INTERVAL 18 YEAR) THEN 1 ELSE 0 END) AS with_children,
+  SUM(CASE WHEN ch.max_dob IS NULL OR ch.max_dob &lt;= DATE_SUB(CURDATE(), INTERVAL 18 YEAR) THEN 1 ELSE 0 END) AS without_children,
+  COUNT(*) AS duplicated_households
+FROM assistance_assistance aa
+JOIN assistance_category ac ON aa.category_id = ac.id
+JOIN cases_case hoh ON hoh.id = aa.case_id
+JOIN cases_household ch ON ch.id = hoh.household_id
+LEFT JOIN details_county dc ON dc.id = ch.county_id
+WHERE ac.name = 'Mobile Pantry'
+  AND aa.date &gt;= '{{start_date}}' AND aa.date &lt; '{{end_exclusive}}'
+GROUP BY county
+ORDER BY duplicated_households DESC;</pre>
+        </div>
+      </div>
+
+      <!-- Age Breakdown -->
+      <div class="sql-panel" id="p-age">
+        <div class="sql-blk">
+          <div class="sql-blk-lbl">Age breakdown — Drive Through + Choice Pantry + Mobile <button class="cp-btn" onclick="cp(this,'q4')">copy</button></div>
+          <pre id="q4">-- Duplicated member age counts (each visit x each household member)
+WITH visits AS (
+  SELECT aa.id, aa.case_id
+  FROM assistance_assistance aa
+  JOIN assistance_category ac ON ac.id = aa.category_id
+  WHERE (ac.name LIKE '%Drive Thru%' OR ac.name LIKE '%Drive Through%'
+      OR ac.name LIKE '%Door Dash%' OR ac.name LIKE '%DoorDash%'
+      OR ac.name LIKE '%Choice Pantry%' OR ac.name = 'Mobile Pantry')
+    AND aa.date &gt;= '{{start_date}}' AND aa.date &lt; '{{end_exclusive}}'
+)
+SELECT
+  SUM(CASE WHEN TIMESTAMPDIFF(YEAR, c2.date_of_birth, CURDATE()) &lt; 18 THEN 1 ELSE 0 END)  AS dup_members_0_17,
+  SUM(CASE WHEN TIMESTAMPDIFF(YEAR, c2.date_of_birth, CURDATE()) BETWEEN 18 AND 59 THEN 1 ELSE 0 END) AS dup_members_18_59,
+  SUM(CASE WHEN TIMESTAMPDIFF(YEAR, c2.date_of_birth, CURDATE()) &gt;= 60 THEN 1 ELSE 0 END) AS dup_members_60_plus,
+  SUM(CASE WHEN c2.date_of_birth IS NULL THEN 1 ELSE 0 END) AS dup_members_unknown
+FROM visits v
+JOIN cases_case hoh ON hoh.id = v.case_id
+JOIN cases_case c2 ON c2.household_id = hoh.household_id AND c2.deceased = 0;</pre>
+        </div>
+      </div>
+
+      <!-- Events / FRH -->
+      <div class="sql-panel" id="p-events">
+        <div class="sql-blk">
+          <div class="sql-blk-lbl">Food Resource Hub — events &amp; unique agencies <button class="cp-btn" onclick="cp(this,'q5')">copy</button></div>
+          <pre id="q5">-- FRH events and unique agencies
+SELECT
+  COUNT(*) AS frh_events,
+  COUNT(DISTINCT ee.location_id) AS unique_agencies
+FROM events_event ee
+JOIN events_eventtype et ON ee.event_type_id = et.id
+WHERE et.name = 'FoodLink'
+  AND ee.date &gt;= '{{start_date}}' AND ee.date &lt; '{{end_exclusive}}';</pre>
+        </div>
+        <div class="sql-blk">
+          <div class="sql-blk-lbl">Pop-up Pantries + Fresh Start Kitchen events <button class="cp-btn" onclick="cp(this,'q6')">copy</button></div>
+          <pre id="q6">-- Pop-up + Fresh Start event totals
+SELECT
+  et.name,
+  COUNT(*) AS events
+FROM events_event ee
+JOIN events_eventtype et ON ee.event_type_id = et.id
+WHERE et.name IN ('Pop up Pantry', 'Senior Pop Up', 'Fresh Start/Re-Start Kitchen')
+  AND ee.date &gt;= '{{start_date}}' AND ee.date &lt; '{{end_exclusive}}'
+GROUP BY et.name
+ORDER BY events DESC;</pre>
+        </div>
+      </div>
+
+      <!-- Full YTD Summary -->
+      <div class="sql-panel" id="p-ytd">
+        <div class="sql-blk">
+          <div class="sql-blk-lbl">Complete YTD summary — all programs <button class="cp-btn" onclick="cp(this,'q7')">copy</button></div>
+          <pre id="q7">-- YTD master summary aligned to Oasis assistance report logic
+SELECT
+  COUNT(*) AS duplicated_household_count,
+  COUNT(DISTINCT aa.case_id) AS household_count,
+  SUM(COALESCE(ch.case_count, 1)) AS duplicated_member_count,
+  ROUND(SUM(CASE WHEN aa.unit_id = 2 THEN aa.amount ELSE 0 END)) AS pounds_distributed,
+  ROUND(SUM(CASE WHEN aa.unit_id = 3 THEN aa.amount ELSE 0 END)) AS boxes_bags_distributed
+FROM assistance_assistance aa
+JOIN assistance_category ac ON ac.id = aa.category_id
+JOIN cases_case hoh ON hoh.id = aa.case_id
+LEFT JOIN cases_household ch ON ch.id = hoh.household_id
+WHERE aa.date &gt;= '{{start_date}}' AND aa.date &lt; '{{end_exclusive}}'
+  AND (ac.name LIKE '%Drive Thru%' OR ac.name LIKE '%Drive Through%'
+    OR ac.name LIKE '%Door Dash%' OR ac.name LIKE '%DoorDash%'
+    OR ac.name LIKE '%Choice Pantry%'
+    OR ac.name = 'Mobile Pantry'
+    OR ac.name LIKE '%Fresh Start%' OR ac.name LIKE '%Senior Box%');</pre>
+        </div>
+      </div>
+    </div><!-- /sql-body -->
+  </div><!-- /sql-wrap -->
+
+</section>
+
+</main>
+
+<div class="footer">IPM Dashboard · Built from Oasis database · Data updated on export</div>
+
+<script>
+const API_BASE = "";
+const MN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+// Build MONTHS dynamically up to today (never hardcoded)
+const MONTHS = [];
+const _today = new Date();
+for(let y = 2021; y <= _today.getFullYear(); y++){
+  const maxM = (y === _today.getFullYear()) ? _today.getMonth() + 1 : 12;
+  for(let m = 1; m <= maxM; m++) MONTHS.push(MN[m-1] + " " + y);
+}
+let idx = MONTHS.length - 1; // default = most recent month
+
+let currentTrendSpan = "12";
+let datePickerYear  = _today.getFullYear();
+
+// ── Loading state ────────────────────────────
+function setLoading(on) {
+  document.getElementById("loadBar").classList.toggle("active", on);
+  document.getElementById("loadOverlay").classList.toggle("active", on);
+  // Disable nav while loading
+  document.querySelectorAll(".month-nav button, .dash-tab-btn, .trend-btn, .hdr-btn")
+    .forEach(el => el.disabled = on);
+}
+
+function showError(msg) {
+  const el = document.getElementById("errBanner");
+  el.textContent = msg;
+  el.classList.toggle("active", !!msg);
+}
+
+function showWarning(msg) {
+  const el = document.getElementById("warnBanner");
+  el.textContent = msg;
+  el.classList.toggle("active", !!msg);
+}
+
+function setDashboardTab(name) {
+  document.querySelectorAll(".dash-tab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.panel === name);
+  });
+  document.querySelectorAll(".dash-panel").forEach(panel => {
+    panel.classList.toggle("active", panel.dataset.panel === name);
+  });
+}
+
+const PC = ["#14532D","#0F766E","#B45309","#1D4ED8"];
+const AC = ["#22C55E","#0EA5E9","#F59E0B"];
+let cProg, cAge, cTrend, cCounty, cGender, cEthnicity, cVet, cEmp, cBen, cLang, cEdu, cHHSize; // Chart instances
+let currentMonthlyData = []; // Store monthly YTD data for sorting
+let currentMonthlySortOrder = "order"; // Track current sort order
+const TL_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function fmt(n){return Math.round(n).toLocaleString()}
+function fmtP(n){return(n>0?"+":"")+n.toFixed(1)+"%"}
+
+async function pushToSheets() {
+  const btn = document.getElementById("sheetBtn");
+  const parts = MONTHS[idx].split(" ");
+  const m = MN.indexOf(parts[0]) + 1;
+  const year = parseInt(parts[1]);
+  btn.disabled = true;
+  btn.textContent = "Pushing…";
+  try {
+    const r = await fetch(`${API_BASE}/api/push-to-sheets`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({year, month: m})
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || `Error ${r.status}`);
+    btn.textContent = "✓ Pushed!";
+    setTimeout(() => { btn.textContent = "↗ Push to Sheets"; btn.disabled = false; }, 3000);
+  } catch(e) {
+    alert("Push to Sheets failed: " + e.message);
+    btn.textContent = "↗ Push to Sheets";
+    btn.disabled = false;
+  }
+}
+
+async function getData(key){
+  const parts = key.split(" ");
+  const m = MN.indexOf(parts[0]) + 1;
+  const year = parts[1];
+  const url = `${API_BASE}/api/dashboard?year=${year}&month=${m}&trend_months=${currentTrendSpan}`;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 45000); // 45s timeout
+  try {
+    const r = await fetch(url, {signal: ctrl.signal});
+    clearTimeout(timer);
+    if(!r.ok) throw new Error(`Server error ${r.status}`);
+    return r.json();
+  } catch(e) {
+    clearTimeout(timer);
+    if(e.name === "AbortError") throw new Error("Request timed out (45s). API mode makes many calls — try SQL mode for instant results.");
+    throw e;
+  }
+}
+
+async function render(key){
+  setLoading(true);
+  showError("");
+  showWarning("");
+  let d;
+  try {
+    d = await getData(key);
+  } catch(e) {
+    setLoading(false);
+    showError(`Could not load data: ${e.message} — make sure the Python server is running (python server.py)`);
+    return;
+  }
+  setLoading(false);
+
+  document.getElementById("monthLbl").textContent = key;
+
+  // Badge reflects the only supported source now.
+  if (d.source) {
+    const badge = document.getElementById("activeBadge");
+    badge.textContent = d.source.toUpperCase();
+    badge.className = "src-badge sql";
+  }
+  showError("");
+
+  const [monthName, yearText] = key.split(" ");
+  const now = new Date();
+  const selectedIsCurrentMonth = monthName === MN[now.getMonth()] && parseInt(yearText, 10) === now.getFullYear();
+  const hasUpdatedData = d.updatedReportAvailable !== false && d.monthRecordCount !== 0;
+  if (selectedIsCurrentMonth && !hasUpdatedData) {
+    showWarning(`There is no updated data for ${monthName.toLowerCase()}, so this view only has YTD data through the end of ${MONTHS[idx-1]}.`);
+  } else {
+    showWarning("");
+  }
+
+  // Hero metrics
+  document.getElementById("mHH").textContent   = fmt(d.hhYTD);
+  document.getElementById("mInd").textContent  = fmt(d.indYTD);
+  document.getElementById("mLbs").textContent  = d.lbsYTD > 0 ? fmt(d.lbsYTD) : "from Nikki + Michael Truitt's reports";
+  if (d.bagsYTD > 0) document.getElementById("mBags").textContent = fmt(d.bagsYTD) + " boxes/bags distributed";
+  document.getElementById("mVsLY").textContent = fmtP(d.vsLY);
+
+  const setChg = (id,v,suf="") => {
+    const el=document.getElementById(id);
+    const pos=v>=0;
+    el.innerHTML=`<span class="${pos?'pos':'neg'}">${pos?"▲":"▼"} ${fmtP(Math.abs(v))}${suf}</span>`;
+  };
+  setChg("mHHchg",  d.vsLY," vs same period last year");
+  setChg("mIndchg", d.vsLY," vs same period last year");
+  setChg("mLbschg", d.vsLY," all sources");
+  setChg("mVschg",  d.vsLY," household visits");
+
+  const yr=key.split(" ")[1];
+  document.getElementById("mHHper").textContent  = `Jan 1 – ${key}`;
+  document.getElementById("mIndper").textContent = `Jan 1 – ${key}`;
+
+  document.getElementById("mMonthHH").textContent = fmt(d.monthHH ?? 0);
+  document.getElementById("mMonthInd").textContent = fmt(d.monthInd ?? 0);
+  document.getElementById("mMonthLbs").textContent = fmt(d.monthLbs ?? 0);
+  document.getElementById("mMonthBags").textContent = fmt(d.monthBags ?? 0);
+  document.getElementById("mMonthHHSub").textContent = `Selected month · ${key}`;
+  document.getElementById("mMonthIndSub").textContent = `Selected month · ${key}`;
+  document.getElementById("mMonthLbsSub").textContent = `Selected month · ${key}`;
+  document.getElementById("mMonthBagsSub").textContent = `Selected month · ${key}`;
+
+  // Bottom stats
+  document.getElementById("sMob").textContent = d.stats.mob;
+  document.getElementById("sPop").textContent = d.stats.pop;
+  document.getElementById("sFRH").textContent = d.stats.frh;
+  document.getElementById("sFSK").textContent = d.stats.fsk;
+  document.getElementById("sBP").textContent      = d.stats.bp > 0 ? fmt(d.stats.bp) : "from Liz";
+  document.getElementById("sPP").textContent      = d.stats.pp > 0 ? fmt(d.stats.pp) : "from Liz";
+  document.getElementById("sNewFam").textContent  = d.newFamilies  != null ? fmt(d.newFamilies)  : "—";
+  document.getElementById("sRetFam").textContent  = d.returningFamilies != null ? fmt(d.returningFamilies) : "—";
+
+  // Program doughnut (YTD data)
+  const pD=[d.progYTD.D,d.progYTD.C,d.progYTD.M,d.progYTD.F];
+  const pL=["Drive Through","Choice Pantry","Mobile/FSK/Pop-up","Food Resource Hub"];
+  const pTot=pD.reduce((a,b)=>a+b,0);
+  if(cProg)cProg.destroy();
+  cProg=new Chart(document.getElementById("cProg"),{
+    type:"doughnut",
+    data:{labels:pL,datasets:[{data:pD,backgroundColor:PC,borderWidth:0,hoverOffset:5}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"66%",
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed)} HH (${(ctx.parsed/pTot*100).toFixed(1)}%)`}}}}
+  });
+  document.getElementById("lProg").innerHTML=pL.map((l,i)=>`
+    <div class="leg-row">
+      <div class="leg-l"><div class="leg-dot" style="background:${PC[i]}"></div><span class="leg-name">${l}</span></div>
+      <span><span class="leg-v">${fmt(pD[i])}</span><span class="leg-pct">${(pD[i]/pTot*100).toFixed(1)}%</span></span>
+    </div>`).join("");
+
+  // Age doughnut
+  const aD=[d.age.ch,d.age.ad,d.age.sr];
+  const aL=["Children (0-17)","Adults (18-59)","Seniors (60+)"];
+  if(cAge)cAge.destroy();
+  cAge=new Chart(document.getElementById("cAge"),{
+    type:"doughnut",
+    data:{labels:aL,datasets:[{data:aD,backgroundColor:AC,borderWidth:0,hoverOffset:5}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"66%",
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed}%`}}}}
+  });
+  document.getElementById("lAge").innerHTML=aL.map((l,i)=>`
+    <div class="leg-row">
+      <div class="leg-l"><div class="leg-dot" style="background:${AC[i]}"></div><span class="leg-name">${l}</span></div>
+      <span class="leg-v">${aD[i]}%</span>
+    </div>`).join("");
+
+  // Trend line
+  const tN=d.trend.length;
+  const tLabels = d.trendLabels || d.trend.map((_,i) => i === 0 || i === tN-1 ? String(i) : "");
+  
+  if(cTrend)cTrend.destroy();
+  cTrend=new Chart(document.getElementById("cTrend"),{
+    type:"line",
+    data:{labels:tLabels,datasets:[{
+      data:d.trend,borderColor:"#14532D",backgroundColor:"rgba(20,83,45,.07)",
+      borderWidth:2,pointRadius:3.5,pointBackgroundColor:"#14532D",tension:.35,fill:true
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{
+        y:{grid:{color:"rgba(0,0,0,.05)"},ticks:{callback:v=>v>=1000?(v/1000).toFixed(1)+"K":v,font:{size:10}},border:{display:false}},
+        x:{grid:{display:false},ticks:{font:{size:10},maxRotation:0,autoSkip:true},border:{display:false}}
+      },
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.y)} households`}}}}
+  });
+
+  // County chart — all programs stacked by county
+  const cfData = (d.countyFull || []).filter(r => r.total > 0);
+  if(cCounty) cCounty.destroy();
+  const cfLabels = cfData.length > 0
+    ? cfData.map(r => r.county)
+    : Object.keys(COUNTY_LIFETIME).filter(k => k !== "Other");
+  const cfDrive  = cfData.length > 0 ? cfData.map(r=>r.drive)  : cfLabels.map(c=>COUNTY_LIFETIME[c]?.drive||0);
+  const cfChoice = cfData.length > 0 ? cfData.map(r=>r.choice) : cfLabels.map(c=>COUNTY_LIFETIME[c]?.choice||0);
+  const cfMobile = cfData.length > 0 ? cfData.map(r=>r.mobile) : cfLabels.map(c=>COUNTY_LIFETIME[c]?.mobile||0);
+  const cfFresh  = cfData.length > 0 ? cfData.map(r=>r.fresh)  : cfLabels.map(c=>COUNTY_LIFETIME[c]?.fresh||0);
+  cCounty = new Chart(document.getElementById("cCounty"), {
+    type: "bar",
+    data: {
+      labels: cfLabels,
+      datasets: [
+        {label:"Drive Through", data:cfDrive,  backgroundColor:"#14532D", borderRadius:3, stack:"s", barPercentage:.7},
+        {label:"Choice Pantry", data:cfChoice, backgroundColor:"#0F766E", borderRadius:3, stack:"s", barPercentage:.7},
+        {label:"Mobile Pantry", data:cfMobile, backgroundColor:"#B45309", borderRadius:3, stack:"s", barPercentage:.7},
+        {label:"Fresh Start",   data:cfFresh,  backgroundColor:"#1D4ED8", borderRadius:3, stack:"s", barPercentage:.7},
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true, position:"top", labels:{usePointStyle:true,pointStyle:"rect",font:{size:11},boxWidth:9,padding:14}},
+        tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.y)} — ${ctx.dataset.label}`}}
+      },
+      scales:{
+        y:{stacked:true, grid:{color:"rgba(0,0,0,.05)"}, ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+"K":v,font:{size:10}}, border:{display:false}},
+        x:{stacked:true, grid:{display:false}, ticks:{font:{size:11},maxRotation:0}, border:{display:false}}
+      }
+    }
+  });
+  // Update YTD note
+  const cntyNote = document.getElementById("cntyYtdNote");
+  if(cntyNote) cntyNote.textContent = cfData.length > 0 ? "YTD badges reflect selected period" : "YTD data unavailable — showing lifetime only";
+  renderCountyCards(cfData);
+
+  // Demographics
+  const demo = d.demographics || {gender: {}, ethnicity: {}};
+  const gKeys = Object.keys(demo.gender);
+  const gVals = gKeys.map(k => demo.gender[k]);
+  const gTot  = gVals.reduce((a,b)=>a+b,0) || 1;
+  const GCOLS = ["#14532D","#0F766E","#B45309","#7C3AED","#9CA3AF"];
+  if(cGender) cGender.destroy();
+  cGender = new Chart(document.getElementById("cGender"), {
+    type: "doughnut",
+    data: {labels: gKeys, datasets: [{data: gVals, backgroundColor: GCOLS, borderWidth: 0, hoverOffset: 5}]},
+    options: {responsive:true, maintainAspectRatio:false, cutout:"66%",
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed)} (${(ctx.parsed/gTot*100).toFixed(1)}%)`}}}}
+  });
+  document.getElementById("lGender").innerHTML = gKeys.map((k,i) => `
+    <div class="leg-row">
+      <div class="leg-l"><div class="leg-dot" style="background:${GCOLS[i]}"></div><span class="leg-name">${k}</span></div>
+      <span><span class="leg-v">${fmt(gVals[i])}</span><span class="leg-pct">${(gVals[i]/gTot*100).toFixed(1)}%</span></span>
+    </div>`).join("");
+
+  const eKeys = Object.keys(demo.ethnicity).sort((a,b)=>demo.ethnicity[b]-demo.ethnicity[a]);
+  const eVals = eKeys.map(k=>demo.ethnicity[k]);
+  const eTot  = eVals.reduce((a,b)=>a+b,0) || 1;
+  const ECOLS = ["#14532D","#0F766E","#B45309","#1D4ED8","#7C3AED","#DB2777","#D97706","#059669"];
+  if(cEthnicity) cEthnicity.destroy();
+  cEthnicity = new Chart(document.getElementById("cEthnicity"), {
+    type: "bar",
+    data: {labels: eKeys, datasets: [{data: eVals, backgroundColor: ECOLS, borderRadius: 4, borderWidth: 0}]},
+    options: {
+      indexAxis: "y",
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.x)} (${(ctx.parsed.x/eTot*100).toFixed(1)}%)`}}},
+      scales:{
+        x:{grid:{color:"rgba(0,0,0,.05)"}, ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+"K":v, font:{size:10}}, border:{display:false}},
+        y:{grid:{display:false}, ticks:{font:{size:11}}, border:{display:false}}
+      }
+    }
+  });
+
+  // ── Veteran Status ────────────────────────────────────────────
+  const vet = (demo.veteran) || {};
+  const vetKeys = Object.keys(vet);
+  const vetVals = vetKeys.map(k => vet[k]);
+  const vetTot  = vetVals.reduce((a,b)=>a+b,0) || 1;
+  const VCOLS = ["#14532D","#0F766E","#9CA3AF"];
+  if(cVet) cVet.destroy();
+  cVet = new Chart(document.getElementById("cVet"), {
+    type: "doughnut",
+    data: {labels: vetKeys, datasets: [{data: vetVals, backgroundColor: VCOLS, borderWidth: 0, hoverOffset: 5}]},
+    options: {responsive:true, maintainAspectRatio:false, cutout:"66%",
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed)} (${(ctx.parsed/vetTot*100).toFixed(1)}%)`}}}}
+  });
+  document.getElementById("lVet").innerHTML = vetKeys.map((k,i) => `
+    <div class="leg-row">
+      <div class="leg-l"><div class="leg-dot" style="background:${VCOLS[i]}"></div><span class="leg-name">${k}</span></div>
+      <span><span class="leg-v">${fmt(vetVals[i])}</span><span class="leg-pct">${(vetVals[i]/vetTot*100).toFixed(1)}%</span></span>
+    </div>`).join("");
+
+  // ── Employment Status ──────────────────────────────────────────
+  const emp = (demo.employment) || {};
+  const empKeys = Object.keys(emp).sort((a,b) => emp[b] - emp[a]);
+  const empVals = empKeys.map(k => emp[k]);
+  const empTot  = empVals.reduce((a,b)=>a+b,0) || 1;
+  const EMCOLS  = ["#14532D","#0F766E","#B45309","#1D4ED8","#7C3AED","#DB2777","#D97706"];
+  if(cEmp) cEmp.destroy();
+  cEmp = new Chart(document.getElementById("cEmp"), {
+    type: "bar",
+    data: {labels: empKeys, datasets: [{data: empVals, backgroundColor: EMCOLS, borderRadius: 4, borderWidth: 0}]},
+    options: {indexAxis:"y", responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.x)} (${(ctx.parsed.x/empTot*100).toFixed(1)}%)`}}},
+      scales:{
+        x:{grid:{color:"rgba(0,0,0,.05)"}, ticks:{callback:v=>v>=1000?(v/1000).toFixed(1)+"K":v, font:{size:10}}, border:{display:false}},
+        y:{grid:{display:false}, ticks:{font:{size:11}}, border:{display:false}}
+      }}
+  });
+
+  // ── Government Benefits ────────────────────────────────────────
+  const ben = (demo.benefits) || {};
+  const benKeys = Object.keys(ben).sort((a,b) => ben[b] - ben[a]);
+  const benVals = benKeys.map(k => ben[k]);
+  const BNCOLS  = ["#14532D","#0F766E","#B45309","#1D4ED8","#7C3AED","#DB2777","#D97706","#059669","#0284C7"];
+  if(cBen) cBen.destroy();
+  cBen = new Chart(document.getElementById("cBen"), {
+    type: "bar",
+    data: {labels: benKeys, datasets: [{data: benVals, backgroundColor: BNCOLS, borderRadius: 4, borderWidth: 0}]},
+    options: {indexAxis:"y", responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.x)} households`}}},
+      scales:{
+        x:{grid:{color:"rgba(0,0,0,.05)"}, ticks:{callback:v=>v>=1000?(v/1000).toFixed(1)+"K":v, font:{size:10}}, border:{display:false}},
+        y:{grid:{display:false}, ticks:{font:{size:11}}, border:{display:false}}
+      }}
+  });
+
+  // ── Primary Language ───────────────────────────────────────────
+  const lang = (demo.language) || {};
+  const langKeys = Object.keys(lang).sort((a,b) => lang[b] - lang[a]);
+  const langVals = langKeys.map(k => lang[k]);
+  const langTot  = langVals.reduce((a,b)=>a+b,0) || 1;
+  const LGCOLS   = ["#14532D","#0F766E","#B45309","#1D4ED8","#7C3AED","#9CA3AF"];
+  if(cLang) cLang.destroy();
+  cLang = new Chart(document.getElementById("cLang"), {
+    type: "bar",
+    data: {labels: langKeys, datasets: [{data: langVals, backgroundColor: LGCOLS, borderRadius: 4, borderWidth: 0}]},
+    options: {indexAxis:"y", responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.x)} (${(ctx.parsed.x/langTot*100).toFixed(1)}%)`}}},
+      scales:{
+        x:{grid:{color:"rgba(0,0,0,.05)"}, ticks:{callback:v=>v>=1000?(v/1000).toFixed(1)+"K":v, font:{size:10}}, border:{display:false}},
+        y:{grid:{display:false}, ticks:{font:{size:11}}, border:{display:false}}
+      }}
+  });
+
+  // ── Education ──────────────────────────────────────────────────
+  const edu = (demo.education) || {};
+  const eduKeys = Object.keys(edu).sort((a,b) => edu[b] - edu[a]);
+  const eduVals = eduKeys.map(k => edu[k]);
+  const eduTot  = eduVals.reduce((a,b)=>a+b,0) || 1;
+  if(cEdu) cEdu.destroy();
+  cEdu = new Chart(document.getElementById("cEdu"), {
+    type: "bar",
+    data: {labels: eduKeys, datasets: [{data: eduVals, backgroundColor: ["#14532D","#0F766E","#B45309","#1D4ED8"], borderRadius: 4, borderWidth: 0}]},
+    options: {indexAxis:"y", responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.x)} (${(ctx.parsed.x/eduTot*100).toFixed(1)}%)`}}},
+      scales:{
+        x:{grid:{color:"rgba(0,0,0,.05)"}, ticks:{font:{size:10}}, border:{display:false}},
+        y:{grid:{display:false}, ticks:{font:{size:11}}, border:{display:false}}
+      }}
+  });
+
+  // ── Household Size Distribution ────────────────────────────────
+  const hhsd = d.hhSizeDist || {};
+  const hhsdKeys = Object.keys(hhsd).map(Number).sort((a,b)=>a-b);
+  const hhsdLabels = hhsdKeys.map(k => k >= 8 ? "8+" : String(k));
+  // Merge 8+ into single bucket
+  const hhsdBuckets = {};
+  hhsdKeys.forEach(k => {
+    const label = k >= 8 ? "8+" : String(k);
+    hhsdBuckets[label] = (hhsdBuckets[label] || 0) + hhsd[k];
+  });
+  const hhsdFinalLabels = [...new Set(hhsdKeys.map(k => k >= 8 ? "8+" : String(k)))];
+  const hhsdFinalVals   = hhsdFinalLabels.map(l => hhsdBuckets[l]);
+  if(cHHSize) cHHSize.destroy();
+  cHHSize = new Chart(document.getElementById("cHHSize"), {
+    type: "bar",
+    data: {
+      labels: hhsdFinalLabels,
+      datasets: [{data: hhsdFinalVals, backgroundColor: "#14532D", borderRadius: 4, borderWidth: 0, barPercentage:.6}]
+    },
+    options: {responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.parsed.y)} households`}}},
+      scales:{
+        y:{grid:{color:"rgba(0,0,0,.05)"}, ticks:{font:{size:10}}, border:{display:false}},
+        x:{grid:{display:false}, title:{display:true,text:"People per household",font:{size:10},color:"#9CA3AF"}, ticks:{font:{size:11}}, border:{display:false}}
+      }}
+  });
+
+  // Monthly YTD breakdown
+  currentMonthlyData = d.monthlyYTD || [];
+  currentMonthlySortOrder = "order"; // Reset to chronological on render
+  renderMonthlyCards();
+}
+
+function renderMonthlyCards(){
+  const monthlyHtml = currentMonthlyData.map(item => `
+    <div class="m-card">
+      <div class="m-lbl">${item.month}</div>
+      <div style="font-size:13px;margin-bottom:8px;color:var(--t2)">
+        <div><strong>${fmt(item.hh)}</strong> <span style="font-size:11px;color:var(--t3)">households</span></div>
+        <div><strong>${fmt(item.ind)}</strong> <span style="font-size:11px;color:var(--t3)">individuals</span></div>
+      </div>
+      <div style="font-size:10px;color:var(--t3)">Cumulative YTD through ${item.month}</div>
+    </div>
+  `).join("");
+  document.getElementById("monthlyGrid").innerHTML = monthlyHtml || '<div style="color:var(--t3);padding:20px;text-align:center">No monthly data available</div>';
+}
+
+function sortMonthly(order){
+  currentMonthlySortOrder = order;
+  
+  // Update button states
+  document.querySelectorAll('[onclick^="sortMonthly"]').forEach(btn => {
+    btn.classList.remove("active");
+  });
+  event.target.classList.add("active");
+  
+  // Sort the data
+  let sorted = [...currentMonthlyData];
+  if(order === "hh"){
+    sorted.sort((a,b) => b.hh - a.hh);
+  } else if(order === "ind"){
+    sorted.sort((a,b) => b.ind - a.ind);
+  }
+  // order === "order" means chronological, which is the natural array order
+  
+  // Update display
+  const monthlyHtml = sorted.map(item => `
+    <div class="m-card">
+      <div class="m-lbl">${item.month}</div>
+      <div style="font-size:13px;margin-bottom:8px;color:var(--t2)">
+        <div><strong>${fmt(item.hh)}</strong> <span style="font-size:11px;color:var(--t3)">households</span></div>
+        <div><strong>${fmt(item.ind)}</strong> <span style="font-size:11px;color:var(--t3)">individuals</span></div>
+      </div>
+      <div style="font-size:10px;color:var(--t3)">Cumulative YTD through ${item.month}</div>
+    </div>
+  `).join("");
+  document.getElementById("monthlyGrid").innerHTML = monthlyHtml;
+}
+
+function nav(dir){
+  idx=Math.max(0,Math.min(MONTHS.length-1,idx+dir));
+  render(MONTHS[idx]);
+}
+
+function setTrend(span){
+  currentTrendSpan = span;
+  document.querySelectorAll(".trend-btn").forEach(btn=>btn.classList.remove("active"));
+  event.target.classList.add("active");
+  render(MONTHS[idx]);
+}
+
+function toggleDatePicker(){
+  const picker = document.getElementById("datePicker");
+  const isOpen = picker.style.display !== "none";
+  picker.style.display = isOpen ? "none" : "block";
+  if(!isOpen) buildDatePickerGrid();
+}
+
+function buildDatePickerGrid(){
+  const grid = document.getElementById("datePickerGrid");
+  const yearSpan = document.getElementById("datePickerYear");
+  yearSpan.textContent = datePickerYear;
+  grid.innerHTML = "";
+  
+  for(let m = 1; m <= 12; m++){
+    const btn = document.createElement("button");
+    btn.className = "date-btn";
+    const monthName = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m-1];
+    btn.textContent = monthName;
+    const currentMonth = MN.indexOf(MONTHS[idx].split(" ")[0]) + 1;
+    const currentYear  = parseInt(MONTHS[idx].split(" ")[1]);
+    if(m === currentMonth && datePickerYear === currentYear) btn.classList.add("active");
+    btn.onclick = () => selectDate(m, datePickerYear);
+    grid.appendChild(btn);
+  }
+}
+
+function datePickerNav(dir){
+  datePickerYear += dir;
+  datePickerYear = Math.max(2021, Math.min(_today.getFullYear(), datePickerYear));
+  buildDatePickerGrid();
+}
+
+function selectDate(month, year){
+  const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const key = monthNames[month-1] + " " + year;
+  
+  // Check if selected month is in the future
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  
+  if(year > currentYear || (year === currentYear && month > currentMonth)){
+    alert(`Oops! You selected ${key}, which is in the future. If you're coming from the future and have that info, upload the new SQL file!`);
+    return;
+  }
+  
+  idx = MONTHS.indexOf(key);
+  if(idx < 0) idx = MONTHS.length - 1;
+  document.getElementById("monthLbl").textContent = key;
+  document.getElementById("datePicker").style.display = "none";
+  render(MONTHS[idx]);
+}
+
+function tab(name){
+  const tabs=["mapping","main","mobile","age","events","ytd"];
+  document.querySelectorAll(".sql-tab").forEach((el,i)=>el.classList.toggle("active",tabs[i]===name));
+  document.querySelectorAll(".sql-panel").forEach(el=>el.classList.remove("active"));
+  document.getElementById("p-"+name).classList.add("active");
+}
+
+function cp(btn,id){
+  const pre=document.getElementById(id);
+  navigator.clipboard.writeText(pre.innerText||pre.textContent).then(()=>{
+    btn.textContent="copied ✓";
+    setTimeout(()=>btn.textContent="copy",1800);
+  });
+}
+
+// ── Static county lifetime data (from Oasis Agency Assistance Report, all years) ──
+const COUNTY_LIFETIME = {
+  "Clermont": {total:85154, hh:8666,  members:26347, drive:29804, choice:13708, mobile:10142, fresh:1550, ch:8236,  ad:12848, sr:4563, uk:700},
+  "Hamilton": {total:14820, hh:1554,  members:4916,  drive:4691,  choice:2574,  mobile:826,   fresh:101,  ch:1758,  ad:2306,  sr:694,  uk:157},
+  "Brown":    {total:8450,  hh:1372,  members:4114,  drive:2694,  choice:928,   mobile:2442,  fresh:65,   ch:1173,  ad:1828,  sr:952,  uk:161},
+  "Highland": {total:815,   hh:236,   members:836,   drive:167,   choice:96,    mobile:426,   fresh:1,    ch:288,   ad:432,   sr:109,  uk:7},
+  "Adams":    {total:606,   hh:276,   members:796,   drive:166,   choice:53,    mobile:299,   fresh:27,   ch:208,   ad:349,   sr:175,  uk:64},
+  "Clinton":  {total:515,   hh:89,    members:276,   drive:155,   choice:83,    mobile:136,   fresh:4,    ch:93,    ad:137,   sr:46,   uk:0},
+  "Warren":   {total:112,   hh:24,    members:89,    drive:45,    choice:31,    mobile:19,    fresh:0,    ch:27,    ad:45,    sr:15,   uk:2},
+  "Other":    {total:1659,  hh:364,   members:1196,  drive:511,   choice:251,   mobile:405,   fresh:1,    ch:375,   ad:597,   sr:181,  uk:43},
+};
+const PROG_COLORS = {drive:"#14532D", choice:"#0F766E", mobile:"#B45309", fresh:"#1D4ED8"};
+const PROG_LABELS = {drive:"Drive Through", choice:"Choice Pantry", mobile:"Mobile Pantry", fresh:"Fresh Start"};
+const COUNTY_ORDER = ["Clermont","Hamilton","Brown","Highland","Adams","Clinton","Warren","Other"];
+
+function renderCountyCards(ytdData) {
+  // Build YTD lookup by county name
+  const ytdMap = {};
+  (ytdData || []).forEach(r => { ytdMap[r.county] = r; });
+
+  const html = COUNTY_ORDER.map(name => {
+    const lt = COUNTY_LIFETIME[name];
+    if (!lt) return "";
+    const ytd = ytdMap[name];
+    const isOther = name === "Other";
+    const ageTot = (lt.ch + lt.ad + lt.sr + lt.uk) || 1;
+    const pct = v => lt.total > 0 ? (v / lt.total * 100).toFixed(0) : "0";
+
+    const progRows = Object.entries(PROG_LABELS).map(([key, lbl]) => `
+      <div class="cnty-row">
+        <div class="cnty-row-lbl">
+          <span class="cnty-dot" style="background:${PROG_COLORS[key]}"></span>${lbl}
+        </div>
+        <span class="cnty-row-val">${fmt(lt[key])} <span style="font-weight:400;color:var(--t3);font-size:10.5px">${pct(lt[key])}%</span></span>
+      </div>`).join("");
+
+    const ytdBlock = ytd ? `
+      <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(0,0,0,.07)">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);margin-bottom:5px">YTD (current period)</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:600;color:var(--g900)">${fmt(ytd.total)} <span style="font-weight:400;font-size:10.5px;color:var(--t3)">visits</span></span>
+          <span style="font-size:12px;color:var(--t2)">${fmt(ytd.unique_hh)} <span style="font-size:10.5px;color:var(--t3)">unique HH</span></span>
+          <span style="font-size:12px;color:var(--t2)">${fmt(ytd.total_members)} <span style="font-size:10.5px;color:var(--t3)">members</span></span>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;font-size:10.5px;color:var(--t3)">
+          <span style="color:#14532D;font-weight:600">${fmt(ytd.drive)}</span> Drive ·
+          <span style="color:#0F766E;font-weight:600">${fmt(ytd.choice)}</span> Choice ·
+          <span style="color:#B45309;font-weight:600">${fmt(ytd.mobile)}</span> Mobile ·
+          <span style="color:#1D4ED8;font-weight:600">${fmt(ytd.fresh)}</span> Fresh
+        </div>
+      </div>` : "";
+
+    return `<div class="cnty-card${isOther ? " other" : ""}">
+      <div class="cnty-name">
+        <span>${isOther ? "Other Counties" : name + " County"}</span>
+        ${ytd ? `<span class="cnty-badge">YTD ${fmt(ytd.total)}</span>` : ""}
+      </div>
+      <div class="cnty-total">${fmt(lt.total)}</div>
+      <div class="cnty-sub">${fmt(lt.hh)} households · ${fmt(lt.members)} members — all-time</div>
+      ${progRows}
+      <div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(0,0,0,.07);display:flex;gap:10px;flex-wrap:wrap">
+        <span class="cnty-age-row">Children <span>${fmt(lt.ch)} · ${(lt.ch/ageTot*100).toFixed(0)}%</span></span>
+        <span class="cnty-age-row">Adults <span>${fmt(lt.ad)} · ${(lt.ad/ageTot*100).toFixed(0)}%</span></span>
+        <span class="cnty-age-row">Seniors <span>${fmt(lt.sr)} · ${(lt.sr/ageTot*100).toFixed(0)}%</span></span>
+      </div>
+      ${ytdBlock}
+    </div>`;
+  }).join("");
+
+  document.getElementById("countyCardGrid").innerHTML = html;
+}
+
+// Boot
+renderCountyCards([]);  // show static cards immediately before first API call
+render(MONTHS[idx]);
+</script>
+</body>
+</html>
